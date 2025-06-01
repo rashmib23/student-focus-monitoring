@@ -1,58 +1,60 @@
-# model_training/train_model.py
+# train_model.py
+
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import LabelEncoder, MinMaxScaler
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report
+from sklearn.preprocessing import StandardScaler
 import joblib
 import os
 
-# Load data
-df = pd.read_csv('data/data.csv')
+# Load datasets
+data1 = pd.read_csv('data/data1.csv')
+data2 = pd.read_csv('data/data2.csv')
 
-# Drop rows with missing values (or use df.fillna())
-df = df.replace(0, np.nan)
-df.fillna(df.mean(numeric_only=True), inplace=True)
+# Normalize engagement levels in data1
+# Original: 1=High, 2=Medium, 3=Low
+# Map to: 0=Low, 1=Medium, 2=High
+data1['EngagementLevel'] = 3 - data1['EngagementLevel']
 
-# Define numeric columns for which zero/missing values are replaced with mean
-numeric_cols = ['HeartRate', 'SkinConductance', 'EEG', 'Temperature', 'PupilDiameter',
-                'SmileIntensity', 'FrownIntensity', 'CortisolLevel', 'ActivityLevel',
-                'AmbientNoiseLevel', 'LightingLevel']
+# Rename columns in data2 to unify naming conventions
+data2 = data2.rename(columns={
+    'HRV': 'HeartRate',
+    'GSR': 'SkinConductance',
+    'EEG_Alpha_Waves': 'EEG',
+    'Engagement_Level': 'EngagementLevel'
+})
 
-# Calculate mean values for these columns (used to replace zeros in inference)
-column_means = df[numeric_cols].mean().to_dict()
+# Select only the necessary columns and ensure consistent order
+data1 = data1[['HeartRate', 'SkinConductance', 'EEG', 'EngagementLevel']]
+data2 = data2[['HeartRate', 'SkinConductance', 'EEG', 'EngagementLevel']]
 
-# Save these means for use in Flask API zero-replacement step
-joblib.dump(column_means, 'backend/column_means.pkl')
+# Combine datasets
+combined = pd.concat([data1, data2], ignore_index=True)
 
-# Encode categorical columns
-label_encoders = {}
-for col in ['EmotionalState', 'CognitiveState']:
-    le = LabelEncoder()
-    df[col] = le.fit_transform(df[col])
-    label_encoders[col] = le
+# Drop rows with missing or NaN values
+combined.dropna(inplace=True)
 
 # Features and target
-X = df.drop('EngagementLevel', axis=1)
-y = df['EngagementLevel']
+X = combined[['HeartRate', 'SkinConductance', 'EEG']]
+y = combined['EngagementLevel']
 
-# Normalize numerical features
-scaler = MinMaxScaler()
-X_scaled = pd.DataFrame(scaler.fit_transform(X), columns=X.columns)
+# Scale features
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
 
-# Split and train
-X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
-model = RandomForestClassifier(random_state=42)
-model.fit(X_train, y_train)
+# Train Random Forest classifier
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_scaled, y)
 
+# Create backend directory if not exists
+os.makedirs('backend', exist_ok=True)
 
 # Save model and scaler
-os.makedirs("backend", exist_ok=True)
 joblib.dump(model, 'backend/model.pkl')
 joblib.dump(scaler, 'backend/scaler.pkl')
-joblib.dump(label_encoders, 'backend/label_encoders.pkl')
 
-# Evaluate
-y_pred = model.predict(X_test)
-print("Classification Report:\n", classification_report(y_test, y_pred))
+# Save column means for missing data imputation at inference time
+column_means = X.mean().to_dict()
+joblib.dump(column_means, 'backend/column_means.pkl')
+
+print("✅ Model training completed and saved to 'backend/'")

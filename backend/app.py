@@ -5,69 +5,66 @@ import numpy as np
 import json
 from queue import Queue
 from flask_cors import CORS
-from flask import make_response
 
 app = Flask(__name__)
 CORS(app)
-# Load model and preprocessing tools
+
+# Load model and scaler
 model = joblib.load('backend/model.pkl')
 scaler = joblib.load('backend/scaler.pkl')
-encoders = joblib.load('backend/label_encoders.pkl')
-column_means = joblib.load('backend/column_means.pkl')
 
-# Queue for real-time streaming
+# Queue for streaming predictions
 prediction_queue = Queue()
 
-# Define expected input format
-expected_columns = [
-    'HeartRate', 'SkinConductance', 'EEG', 'Temperature', 'PupilDiameter',
-    'SmileIntensity', 'FrownIntensity', 'CortisolLevel', 'ActivityLevel',
-    'AmbientNoiseLevel', 'LightingLevel', 'EmotionalState', 'CognitiveState'
-]
-
-numeric_cols = [
-    'HeartRate', 'SkinConductance', 'EEG', 'Temperature', 'PupilDiameter',
-    'SmileIntensity', 'FrownIntensity', 'CortisolLevel', 'ActivityLevel',
-    'AmbientNoiseLevel', 'LightingLevel'
-]
+# Features expected by the model (order matters!)
+expected_columns = ['HeartRate', 'SkinConductance', 'EEG']
 
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
         input_data = request.json
-        df = pd.DataFrame([input_data])
+        print(f"Received input JSON: {input_data}")
 
-        # Check all expected columns are present
+        # Validate that all expected columns are present
         for col in expected_columns:
-            if col not in df.columns:
-                return jsonify({"error": f"Missing column: {col}"}), 400
+            if col not in input_data:
+                error_msg = f"Missing column in input data: {col}"
+                print(error_msg)
+                return jsonify({"error": error_msg}), 400
 
-        # Replace missing or zero values with column means
-        for col in numeric_cols:
-            val = df[col].iloc[0]
-            if val == 0 or val is None or (isinstance(val, float) and np.isnan(val)):
-                df[col] = column_means[col]
+        # Create DataFrame with correct column order
+        df = pd.DataFrame([{col: input_data[col] for col in expected_columns}])
+        print(f"Input DataFrame before filling missing values:\n{df}")
 
-        # Encode categorical values
-        for col in ['EmotionalState', 'CognitiveState']:
-            if df[col].iloc[0] not in encoders[col].classes_:
-                return jsonify({"error": f"Invalid category '{df[col].iloc[0]}' for {col}"}), 400
-            df[col] = encoders[col].transform(df[col])
+        # Replace None or NaN values with 0 (or you can use column means if saved)
+        for col in expected_columns:
+            if df.at[0, col] is None or pd.isna(df.at[0, col]):
+                print(f"Value for {col} is missing; replacing with 0")
+                df.at[0, col] = 0
 
-        # Reorder columns and scale numeric values
-        df = df[expected_columns]
-        df_scaled = pd.DataFrame(scaler.transform(df), columns=expected_columns)
+        print(f"DataFrame after filling missing values:\n{df}")
 
-        # Predict
-        prediction = int(model.predict(df_scaled)[0])
-        input_data['EngagementLevel'] = prediction
+        # Scale the input features using the loaded scaler
+        df_scaled = scaler.transform(df)
+        print(f"Scaled features:\n{df_scaled}")
 
-        # Stream this result
+        # Predict engagement level
+        prediction = model.predict(df_scaled)[0]
+        print(f"Model raw prediction: {prediction}")
+
+        # Convert prediction to int for JSON serialization if needed
+        predicted_level = int(prediction)
+
+        # Add prediction to input data (optional for streaming)
+        input_data['PredictedEngagementLevel'] = predicted_level
+
+        # Add to streaming queue
         prediction_queue.put(input_data)
 
-        return jsonify({"EngagementLevel": prediction})
+        return jsonify({"EngagementLevel": predicted_level})
 
     except Exception as e:
+        print(f"Error during prediction: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/stream')
@@ -77,9 +74,7 @@ def stream():
             data = prediction_queue.get()
             yield f'data: {json.dumps(data)}\n\n'
 
-    response = Response(event_stream(), mimetype='text/event-stream')
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    return response
+    return Response(event_stream(), mimetype='text/event-stream')
 
 if __name__ == '__main__':
     app.run(debug=True)

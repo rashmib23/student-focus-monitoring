@@ -7,14 +7,10 @@ eventSource.onmessage = function (event) {
   const row = document.createElement("tr");
   row.innerHTML = `
     <td>${new Date().toLocaleTimeString()}</td>
-    <td>${data.HeartRate}</td>
-    <td>${data.SkinConductance}</td>
-    <td>${data.EEG}</td>
-    <td>${data.Temperature}</td>
-    <td>${data.PupilDiameter}</td>
-    <td>${data.SmileIntensity}</td>
-    <td>${data.FrownIntensity}</td>
-    <td>${data.EngagementLevel}</td>
+    <td>${data.HeartRate !== undefined ? data.HeartRate : '-'}</td>
+    <td>${data.SkinConductance !== undefined ? data.SkinConductance : '-'}</td>
+    <td>${data.EEG !== undefined ? data.EEG : '-'}</td>
+    <td>${data.PredictedEngagementLevel !== undefined ? data.PredictedEngagementLevel : '-'}</td>
   `;
   tableBody.appendChild(row);
 };
