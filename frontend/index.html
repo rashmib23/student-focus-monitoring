@@ -8,6 +8,25 @@
 </head>
 <body>
   <h1>Real-Time Student Focus Dashboard</h1>
+
+  <div id="dashboard">
+    <form id="manualForm">
+      <h3>Enter Data Manually</h3>
+      <label>Heart Rate: <input type="number" name="HeartRate" step="0.01" required></label>
+      <label>Skin Conductance: <input type="number" name="SkinConductance" step="0.01" required></label>
+      <label>EEG: <input type="number" name="EEG" step="0.01" required></label>
+      <button type="submit">Submit</button>
+    </form>
+
+    <hr>
+
+    <form id="csvUploadForm">
+      <input type="file" id="csvFile" accept=".csv" required />
+      <button type="submit">Upload CSV</button>
+    </form>
+
+  </div>
+
   <table id="dataTable">
     <thead>
       <tr>
@@ -20,9 +39,7 @@
     </thead>
     <tbody></tbody>
   </table>
+
   <script src="app.js"></script>
 </body>
 </html>
-
-
-

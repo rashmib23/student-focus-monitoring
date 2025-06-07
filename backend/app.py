@@ -22,50 +22,59 @@ expected_columns = ['HeartRate', 'SkinConductance', 'EEG']
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        input_data = request.json
-        print(f"Received input JSON: {input_data}")
+        if request.content_type.startswith('application/json'):
+            # Handle JSON input
+            input_data = request.json
+            print(f"Received JSON: {input_data}")
 
-        # Validate that all expected columns are present
-        for col in expected_columns:
-            if col not in input_data:
-                error_msg = f"Missing column in input data: {col}"
-                print(error_msg)
-                return jsonify({"error": error_msg}), 400
+            # Validate columns
+            for col in expected_columns:
+                if col not in input_data:
+                    return jsonify({"error": f"Missing column: {col}"}), 400
 
-        # Create DataFrame with correct column order
-        df = pd.DataFrame([{col: input_data[col] for col in expected_columns}])
-        print(f"Input DataFrame before filling missing values:\n{df}")
+            df = pd.DataFrame([{col: input_data[col] for col in expected_columns}])
 
-        # Replace None or NaN values with 0 (or you can use column means if saved)
-        for col in expected_columns:
-            if df.at[0, col] is None or pd.isna(df.at[0, col]):
-                print(f"Value for {col} is missing; replacing with 0")
-                df.at[0, col] = 0
+        elif request.content_type.startswith('multipart/form-data'):
+            # Handle CSV upload
+            if 'file' not in request.files:
+                return jsonify({"error": "CSV file not found"}), 400
 
-        print(f"DataFrame after filling missing values:\n{df}")
+            file = request.files['file']
+            print("Received CSV file:", file.filename)
 
-        # Scale the input features using the loaded scaler
+            df = pd.read_csv(file)
+
+            print("CSV Columns:", df.columns.tolist())
+
+            # Ensure all expected columns are present
+            if not all(col in df.columns for col in expected_columns):
+                return jsonify({"error": f"CSV must contain columns: {expected_columns}"}), 400
+
+            df = df[expected_columns]  # Reorder just in case
+
+        else:
+            return jsonify({"error": "Unsupported Content-Type"}), 400
+
+        # Fill missing values
+        df.fillna(0, inplace=True)
+
+        # Scale and predict
         df_scaled = scaler.transform(df)
-        print(f"Scaled features:\n{df_scaled}")
+        predictions = model.predict(df_scaled)
 
-        # Predict engagement level
-        prediction = model.predict(df_scaled)[0]
-        print(f"Model raw prediction: {prediction}")
-
-        # Convert prediction to int for JSON serialization if needed
-        predicted_level = int(prediction)
-
-        # Add prediction to input data (optional for streaming)
-        input_data['PredictedEngagementLevel'] = predicted_level
-
-        # Add to streaming queue
-        prediction_queue.put(input_data)
-
-        return jsonify({"EngagementLevel": predicted_level})
+        # Handle single vs batch prediction
+        if len(predictions) > 1:
+            results = df.copy()
+            results['PredictedEngagementLevel'] = predictions.astype(int)
+            return jsonify(results.to_dict(orient='records'))
+        else:
+            predicted_level = int(predictions[0])
+            return jsonify({"EngagementLevel": predicted_level})
 
     except Exception as e:
-        print(f"Error during prediction: {e}")
+        print(f"Prediction Error: {e}")
         return jsonify({"error": str(e)}), 500
+
 
 @app.route('/stream')
 def stream():
