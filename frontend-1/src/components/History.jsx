@@ -20,6 +20,20 @@ const History = () => {
       );
   }, []);
 
+  // Mapping function for engagement levels
+  const getLabel = (level) => {
+    switch (level) {
+      case 0:
+        return "Low";
+      case 1:
+        return "Moderate";
+      case 2:
+        return "High";
+      default:
+        return "Unknown";
+    }
+  };
+
   return (
     <div style={{ maxWidth: 700, margin: "auto", padding: 20 }}>
       {/* Navigation Bar */}
@@ -72,7 +86,7 @@ const History = () => {
                 <td>{item.input_data.HeartRate}</td>
                 <td>{item.input_data.SkinConductance}</td>
                 <td>{item.input_data.EEG}</td>
-                <td>{item.predicted_engagement_level}</td>
+                <td>{getLabel(item.predicted_engagement_level)}</td>
               </tr>
             ))}
           </tbody>

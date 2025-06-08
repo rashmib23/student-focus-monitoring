@@ -1,6 +1,14 @@
 import React, { useState } from "react";
 import { manualPredict, csvPredict } from "../api";
 import { useNavigate, Link } from "react-router-dom";
+const mapEngagementLabel = (value) => {
+  switch (value) {
+    case 0: return "Low";
+    case 1: return "Moderate";
+    case 2: return "High";
+    default: return "Unknown";
+  }
+};
 
 const Dashboard = () => {
   const [heartRate, setHeartRate] = useState("");
@@ -52,7 +60,7 @@ const Dashboard = () => {
       setCsvError(err.response?.data?.error || "CSV Prediction failed");
     }
   };
-
+  
   return (
     <div style={{ maxWidth: 700, margin: "auto", padding: 20 }}>
       {/* Navigation Bar */}
@@ -104,7 +112,10 @@ const Dashboard = () => {
         </form>
         {manualResult !== null && (
           <p>
-            <strong>Predicted Engagement Level: </strong> {manualResult}
+            <p>
+              <strong>Predicted Engagement Level: </strong> {mapEngagementLabel(manualResult)}
+            </p>
+
           </p>
         )}
       </section>
@@ -141,7 +152,7 @@ const Dashboard = () => {
                   <td>{row.HeartRate}</td>
                   <td>{row.SkinConductance}</td>
                   <td>{row.EEG}</td>
-                  <td>{row.PredictedEngagementLevel}</td>
+                  <td>{mapEngagementLabel(row.PredictedEngagementLevel)}</td>
                 </tr>
               ))}
             </tbody>

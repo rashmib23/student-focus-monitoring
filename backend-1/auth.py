@@ -39,19 +39,29 @@ def login():
 
 @auth_bp.route('/profile', methods=['GET'])
 def profile():
-    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    # Extract token from Authorization header
+    auth_header = request.headers.get('Authorization', '')
+    if not auth_header.startswith('Bearer '):
+        return jsonify({"error": "Authorization header missing or invalid"}), 401
+
+    token = auth_header.replace('Bearer ', '')
+
+    # Verify token and extract username
     username = verify_token(token)
     if not username:
-        return jsonify({"error": "Unauthorized"}), 401
-    
+        return jsonify({"error": "Invalid or expired token"}), 401
+
+    # Get user info from storage
     user = get_user(username)
     if not user:
         return jsonify({"error": "User not found"}), 404
 
-    # Remove sensitive info like password before sending
+    # Build safe user info (excluding password)
     user_info = {
-        "username": user["username"],
-        "email": user["email"],
-        # add other public fields if any
+        "username": user.get("username", ""),
+        "email": user.get("email", "")
     }
-    return jsonify(user_info)
+
+    print(f"[DEBUG] /profile returning: {user_info}")  # Helpful for console debugging
+
+    return jsonify(user_info), 200

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { fetchUserProfile } from "../api";  // import the axios function
+import { fetchUserProfile } from "../api";  // Axios function calling /auth/profile
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -20,20 +20,26 @@ const Profile = () => {
       return;
     }
 
-     fetchUserProfile()
-    .then((data) => {
-      console.log("Fetched user profile:", data);  // 👈 Add this
-      setUser(data);
-      setLoading(false);
-    })
-    .catch(() => {
-      setError("Unable to load profile.");
-      setLoading(false);
-    });
-}, [navigate]);
+    fetchUserProfile()
+      .then((res) => {
+        console.log("Fetched user profile:", res.data); // Only log the actual user data
+        if (res.data && res.data.username && res.data.email) {
+          setUser(res.data);
+        } else {
+          setError("Invalid profile data received.");
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Profile fetch error:", err);
+        setError("Unable to load profile.");
+        setLoading(false);
+      });
+  }, [navigate]);
 
   return (
     <div style={{ maxWidth: 700, margin: "auto", padding: 20 }}>
+      {/* Navigation Bar */}
       <nav
         style={{
           marginBottom: 20,
