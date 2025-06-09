@@ -137,7 +137,7 @@ def csv_predict():
     file = request.files['file']
     df = pd.read_csv(file)
 
-    # Expect 'student_id' as a column
+    # Required columns check
     required_columns = expected_columns + ['student_id']
     if not all(col in df.columns for col in required_columns):
         return jsonify({"error": f"CSV must contain columns: {required_columns}"}), 400
@@ -152,11 +152,22 @@ def csv_predict():
         input_row = row[expected_columns].to_dict()
         range_errors = validate_ranges(input_row)
         if range_errors:
-            continue  # Or log the error or add to a rejected list
-        level = int(row['PredictedEngagementLevel'])
+            continue
 
+        level = int(row['PredictedEngagementLevel'])
         feedback, top_feats, severities = generate_feedback(level, input_row)
 
+        # ✅ Use timestamp from CSV if exists, else use current time
+        timestamp = row.get('timestamp')
+        if pd.isna(timestamp) or str(timestamp).strip() == "":
+            timestamp = pd.Timestamp.now()
+        else:
+            try:
+                timestamp = pd.to_datetime(timestamp)
+            except Exception:
+                timestamp = pd.Timestamp.now()
+
+        # Insert into MongoDB
         doc = {
             "username": username,
             "student_id": student_id,
@@ -165,10 +176,11 @@ def csv_predict():
             "feedback": feedback,
             "top_features": [f[0] for f in top_feats],
             "severities": severities,
-            "timestamp": pd.Timestamp.now()
+            "timestamp": timestamp.to_pydatetime() if hasattr(timestamp, "to_pydatetime") else timestamp
         }
         predictions_collection.insert_one(doc)
 
+        # Append to response
         result = {
             "student_id": student_id,
             "StudentID": student_id,
@@ -176,11 +188,13 @@ def csv_predict():
             "PredictedEngagementLevel": level,
             "Feedback": feedback,
             "TopFeatures": [f[0] for f in top_feats],
-            "Severities": severities
+            "Severities": severities,
+            "timestamp": str(timestamp)
         }
         records.append(result)
 
     return jsonify(records)
+
 
 # ---------------------- /history route ----------------------
 @prediction_bp.route('/history', methods=['GET'])
