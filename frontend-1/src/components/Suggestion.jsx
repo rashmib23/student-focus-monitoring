@@ -10,6 +10,7 @@ import {
   PointElement,
   Tooltip,
   Legend,
+  Filler,
 } from "chart.js";
 
 ChartJS.register(
@@ -18,7 +19,8 @@ ChartJS.register(
   LinearScale,
   PointElement,
   Tooltip,
-  Legend
+  Legend,
+  Filler
 );
 
 const Suggestion = () => {
@@ -58,9 +60,34 @@ const Suggestion = () => {
     }
   };
 
+  // Helper: Calculate average engagement level
+  const averageEngagement = () => {
+    if (!history.length) return null;
+    const avg =
+      history.reduce((acc, h) => acc + h.predicted_engagement_level, 0) /
+      history.length;
+    return avg.toFixed(2);
+  };
+
+  // Helper: Get most recent suggestion
+  const dynamicSuggestion = () => {
+    const recent = history.slice(-5);
+    const avgRecent =
+      recent.reduce((acc, h) => acc + h.predicted_engagement_level, 0) /
+      recent.length;
+
+    if (avgRecent < 0.5) {
+      return "Recent attention is very low. Suggest 5-minute physical movement or engaging quiz.";
+    } else if (avgRecent < 1.2) {
+      return "Moderate engagement recently. Try varying content presentation style.";
+    } else {
+      return "Student is staying engaged well. Offer advanced tasks to challenge them.";
+    }
+  };
+
   return (
-    <div style={{ maxWidth: 800, margin: "auto", padding: 20 }}>
-      {/* Navigation Bar */}
+    <div style={{ maxWidth: 900, margin: "auto", padding: 20 }}>
+      {/* Navigation */}
       <nav
         style={{
           marginBottom: 20,
@@ -85,26 +112,32 @@ const Suggestion = () => {
         </button>
       </nav>
 
-      <h2>Student Engagement Suggestion</h2>
+      <h2>Engagement Suggestion Center</h2>
 
-      <input
-        type="text"
-        placeholder="Enter Student ID"
-        value={studentId}
-        onChange={(e) => setStudentId(e.target.value)}
-        style={{ marginRight: 10 }}
-      />
-      <button onClick={handleSearch}>Search</button>
+      <div style={{ marginBottom: 20 }}>
+        <input
+          type="text"
+          placeholder="Enter Student ID"
+          value={studentId}
+          onChange={(e) => setStudentId(e.target.value)}
+          style={{ marginRight: 10 }}
+        />
+        <button onClick={handleSearch}>Search</button>
+      </div>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
 
       {history.length > 0 && (
         <>
-          <h3>Prediction History for {studentId}</h3>
-          <table border="1" cellPadding="5" style={{ width: "100%" }}>
+          <h3>Summary for: <em>{studentId}</em></h3>
+          <p><strong>Average Engagement Level:</strong> {averageEngagement()}</p>
+          <p><strong>Latest Suggestion:</strong> {dynamicSuggestion()}</p>
+
+          {/* Table */}
+          <table border="1" cellPadding="5" style={{ width: "100%", marginTop: 20 }}>
             <thead>
               <tr>
-                <th>Timestamp</th>
+                <th>Time</th>
                 <th>HeartRate</th>
                 <th>SkinConductance</th>
                 <th>EEG</th>
@@ -120,14 +153,15 @@ const Suggestion = () => {
                   <td>{h.input_data.SkinConductance}</td>
                   <td>{h.input_data.EEG}</td>
                   <td>{getLabel(h.predicted_engagement_level)}</td>
-                  <td>{h.feedback || ""}</td>
+                  <td>{h.feedback || "—"}</td>
                 </tr>
               ))}
             </tbody>
           </table>
 
-          {/* Charts */}
+          {/* Graph */}
           <div style={{ marginTop: 40 }}>
+            <h4>Physiological Trends</h4>
             <Line
               data={{
                 labels: history.map((h) =>
@@ -138,40 +172,58 @@ const Suggestion = () => {
                     label: "Heart Rate",
                     data: history.map((h) => h.input_data.HeartRate),
                     borderColor: "red",
-                    fill: false,
+                    backgroundColor: "rgba(255,0,0,0.1)",
+                    fill: true,
+                    tension: 0.4,
                   },
                   {
                     label: "Skin Conductance",
                     data: history.map((h) => h.input_data.SkinConductance),
                     borderColor: "blue",
-                    fill: false,
+                    backgroundColor: "rgba(0,0,255,0.1)",
+                    fill: true,
+                    tension: 0.4,
                   },
                   {
                     label: "EEG",
                     data: history.map((h) => h.input_data.EEG),
                     borderColor: "green",
-                    fill: false,
+                    backgroundColor: "rgba(0,255,0,0.1)",
+                    fill: true,
+                    tension: 0.4,
                   },
                 ],
+              }}
+              options={{
+                responsive: true,
+                plugins: {
+                  legend: {
+                    position: "top",
+                  },
+                },
               }}
             />
           </div>
 
-          {/* Suggestions */}
-          <div style={{ marginTop: 30 }}>
-            <h4>Suggestions Based on Data</h4>
+          {/* Smart Suggestions */}
+          <div style={{ marginTop: 40 }}>
+            <h4>Behavioral Suggestions</h4>
             <ul>
               {history.some((h) => h.predicted_engagement_level === 0) && (
-                <li>Engagement was low. Consider interactive tasks or short breaks.</li>
+                <li>
+                  Low engagement detected. Introduce gamified content or peer interaction.
+                </li>
               )}
-              {history.filter((h) => h.predicted_engagement_level === 2).length > history.length / 2 && (
-                <li>Student is highly engaged most of the time. Keep up the good work!</li>
+              {history.slice(-3).every((h) => h.predicted_engagement_level === 0) && (
+                <li>
+                  Recent trend shows consistent disengagement. Follow-up is recommended.
+                </li>
               )}
-              {history.length >= 5 &&
-                history.slice(-3).every((h) => h.predicted_engagement_level === 0) && (
-                  <li>
-                    Recent data shows disengagement. Consider follow-up with the student.
-                  </li>
+              {history.filter((h) => h.predicted_engagement_level === 2).length >=
+                history.length / 2 && (
+                <li>
+                  Student is doing great! Assign exploratory or creative tasks.
+                </li>
               )}
             </ul>
           </div>
