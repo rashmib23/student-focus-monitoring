@@ -170,6 +170,7 @@ def csv_predict():
         predictions_collection.insert_one(doc)
 
         result = {
+            "student_id": student_id,
             "StudentID": student_id,
             **input_row,
             "PredictedEngagementLevel": level,
