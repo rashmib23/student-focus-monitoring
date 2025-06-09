@@ -1,0 +1,9 @@
+flask
+flask-cors
+pandas
+numpy
+scikit-learn
+joblib
+react-chartjs-2 
+chart.js
+pyjwt

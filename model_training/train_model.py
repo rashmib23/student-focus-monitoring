@@ -1,58 +1,73 @@
-# model_training/train_model.py
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import LabelEncoder, MinMaxScaler
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report
+from sklearn.preprocessing import StandardScaler
 import joblib
 import os
+import shap
 
-# Load data
-df = pd.read_csv('data/data.csv')
+# Load dataset
+data2 = pd.read_csv('data/data2.csv')
 
-# Drop rows with missing values (or use df.fillna())
-df = df.replace(0, np.nan)
-df.fillna(df.mean(numeric_only=True), inplace=True)
+# Rename columns to unify naming conventions
+data2 = data2.rename(columns={
+    'HRV': 'HeartRate',
+    'GSR': 'SkinConductance',
+    'EEG_Alpha_Waves': 'EEG',
+    'Engagement_Level': 'EngagementLevel'
+})
 
-# Define numeric columns for which zero/missing values are replaced with mean
-numeric_cols = ['HeartRate', 'SkinConductance', 'EEG', 'Temperature', 'PupilDiameter',
-                'SmileIntensity', 'FrownIntensity', 'CortisolLevel', 'ActivityLevel',
-                'AmbientNoiseLevel', 'LightingLevel']
+# Select relevant columns
+data2 = data2[['HeartRate', 'SkinConductance', 'EEG', 'EngagementLevel']]
 
-# Calculate mean values for these columns (used to replace zeros in inference)
-column_means = df[numeric_cols].mean().to_dict()
+# Replace zeros with NaN to mark as missing
+data2[['HeartRate', 'SkinConductance', 'EEG']] = data2[['HeartRate', 'SkinConductance', 'EEG']].replace(0, np.nan)
 
-# Save these means for use in Flask API zero-replacement step
-joblib.dump(column_means, 'backend/column_means.pkl')
-
-# Encode categorical columns
-label_encoders = {}
-for col in ['EmotionalState', 'CognitiveState']:
-    le = LabelEncoder()
-    df[col] = le.fit_transform(df[col])
-    label_encoders[col] = le
+# Impute missing values with column means
+column_means = data2[['HeartRate', 'SkinConductance', 'EEG']].mean()
+data2.fillna(column_means, inplace=True)
 
 # Features and target
-X = df.drop('EngagementLevel', axis=1)
-y = df['EngagementLevel']
+X = data2[['HeartRate', 'SkinConductance', 'EEG']]
+y = data2['EngagementLevel']
 
-# Normalize numerical features
-scaler = MinMaxScaler()
-X_scaled = pd.DataFrame(scaler.fit_transform(X), columns=X.columns)
+# Scale features
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
 
-# Split and train
-X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
-model = RandomForestClassifier(random_state=42)
-model.fit(X_train, y_train)
+# Train Random Forest classifier
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_scaled, y)
+
+# SHAP explanation (CPU mode, no torch backend)
+explainer = shap.Explainer(model, X_scaled)
+shap_values = explainer(X_scaled)
+
+# Compute mean absolute SHAP values for each class
+shap_summary = {}
+engagement_labels = ['Low', 'Moderate', 'High']
+for i in range(3):  # Classes: 0=Low, 1=Moderate, 2=High
+    class_shap = np.abs(shap_values.values[y == i])
+    means = class_shap.mean(axis=0)  # Shape: (3,)
+
+    shap_summary[int(i)] = {
+        name: float(val[0] if isinstance(val, (np.ndarray, list)) else val)
+        for name, val in zip(['HeartRate', 'SkinConductance', 'EEG'], means)
+    }
 
 
-# Save model and scaler
-os.makedirs("backend", exist_ok=True)
+
+# Save everything to backend folder
+os.makedirs('backend', exist_ok=True)
 joblib.dump(model, 'backend/model.pkl')
 joblib.dump(scaler, 'backend/scaler.pkl')
-joblib.dump(label_encoders, 'backend/label_encoders.pkl')
+joblib.dump(column_means.to_dict(), 'backend/column_means.pkl')
+joblib.dump(shap_summary, 'backend/feature_importance_shap.pkl')
 
-# Evaluate
-y_pred = model.predict(X_test)
-print("Classification Report:\n", classification_report(y_test, y_pred))
+os.makedirs('backend-1', exist_ok=True)
+joblib.dump(model, 'backend-1/model.pkl')
+joblib.dump(scaler, 'backend-1/scaler.pkl')
+joblib.dump(column_means.to_dict(), 'backend-1/column_means.pkl')
+joblib.dump(shap_summary, 'backend-1/feature_importance_shap.pkl')
+
+print("✅ Model training complete with SHAP-based feedback support saved to 'backend/'")
