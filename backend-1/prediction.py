@@ -44,6 +44,17 @@ def grade_severity(value, mean):
         return 'mild'
     else:
         return 'severe'
+    
+def validate_ranges(input_data):
+    errors = []
+    if not (40 <= input_data['HeartRate'] <= 200):
+        errors.append("HeartRate must be between 40 and 200 BPM.")
+    if not (0 <= input_data['EEG'] <= 200):
+        errors.append("EEG must be between 0 and 200 uV.")
+    if not (0 <= input_data['SkinConductance'] <= 100):
+        errors.append("SkinConductance must be between 0 and 100 µS.")
+    return errors
+
 
 def generate_feedback(level, features):
     shap_weights = shap_importance.get(int(level), {})
@@ -83,6 +94,10 @@ def manual_predict():
             return jsonify({"error": f"Missing column: {col}"}), 400
 
     data_for_model = {col: input_data[col] for col in expected_columns}
+    range_errors = validate_ranges(data_for_model)
+    if range_errors:
+        return jsonify({"error": " | ".join(range_errors)}), 400
+
     df = pd.DataFrame([data_for_model], columns=expected_columns)
     pred = int(predict_df(df)[0])
 
@@ -135,6 +150,9 @@ def csv_predict():
     for idx, row in df.iterrows():
         student_id = row['student_id']
         input_row = row[expected_columns].to_dict()
+        range_errors = validate_ranges(input_row)
+        if range_errors:
+            continue  # Or log the error or add to a rejected list
         level = int(row['PredictedEngagementLevel'])
 
         feedback, top_feats, severities = generate_feedback(level, input_row)
