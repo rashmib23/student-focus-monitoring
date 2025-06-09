@@ -3,4 +3,6 @@
 run python backend-1/app.py
 
 cd frontend-1
-npm start
+
+-npm install
+-npm start
