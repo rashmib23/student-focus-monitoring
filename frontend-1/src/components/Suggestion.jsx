@@ -75,50 +75,81 @@ const Suggestion = () => {
   };
 
   const generateDynamicSuggestions = () => {
-    const n = history.length;
-    if (n === 0) return [];
+  const n = history.length;
+  if (n === 0) return [];
 
-    const levels = history.map((h) => h.predicted_engagement_level);
-    const avg =
-      levels.reduce((acc, val) => acc + val, 0) / levels.length;
+  const levels = history.map(h => h.predicted_engagement_level);
+  const avg = levels.reduce((sum, val) => sum + val, 0) / n;
 
-    const recent = levels.slice(-5);
-    const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length;
+  const recent = levels.slice(-Math.min(5, n));
+  const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length;
 
-    const variance =
-      levels.reduce((acc, val) => acc + Math.pow(val - avg, 2), 0) / n;
+  const variance = levels.reduce((acc, val) => acc + Math.pow(val - avg, 2), 0) / n;
 
-    const mode = levels
-      .sort((a, b) =>
-        levels.filter((v) => v === a).length -
-        levels.filter((v) => v === b).length
-      )
-      .pop();
+  const frequency = levels.reduce((acc, val) => {
+    acc[val] = (acc[val] || 0) + 1;
+    return acc;
+  }, {});
+  const mode = Object.keys(frequency).reduce((a, b) =>
+    frequency[a] > frequency[b] ? a : b
+  );
 
-    const suggestions = [];
+  const timestamps = history.map(h => new Date(h.timestamp).getHours());
+  const afternoonLowCount = timestamps
+    .map((t, i) => (t >= 13 && t <= 16 && levels[i] < 1 ? 1 : 0))
+    .reduce((a, b) => a + b, 0);
 
-    if (recentAvg < 0.5) {
-      suggestions.push("🟥 Very low recent focus. Suggest active tasks like discussion or quick quizzes.");
-    }
+  const lowFeedbackCount = history.filter(
+    h => h.feedback && h.feedback.toLowerCase().includes("boring")
+  ).length;
 
-    if (avg < 1 && recentAvg < avg) {
-      suggestions.push("📉 Engagement is dropping. Recommend mentoring or personalized support.");
-    }
+  const suggestions = [];
 
-    if (variance > 0.9) {
-      suggestions.push("🔁 Focus level varies. Encourage structured routines like Pomodoro.");
-    }
+  // 1. Very low recent focus
+  if (recentAvg < 0.5) {
+    suggestions.push("🟥 Very low recent focus. Try interactive activities like quizzes or peer discussion.");
+    suggestions.push("🧠 Use multimedia or personal storytelling to stimulate attention.");
+  }
 
-    if (mode === 2 && avg > 1.5) {
-      suggestions.push("✅ Consistently engaged. Suggest advanced research or leadership opportunities.");
-    }
+  // 2. Engagement dropping
+  if (avg < 1 && recentAvg < avg) {
+    suggestions.push("📉 Engagement is dropping. Try short learning bursts and gamified tasks.");
+    suggestions.push("👥 Introduce collaborative exercises to improve involvement.");
+  }
 
-    if (suggestions.length === 0) {
-      suggestions.push("🙂 Stable behavior. Continue using current teaching methods.");
-    }
+  // 3. High variance
+  if (variance > 0.5) {
+    suggestions.push("🔁 Engagement fluctuates. Recommend fixed daily schedules or structured breaks.");
+    suggestions.push("⏱️ Use Pomodoro or 45-10 minute learning cycles.");
+  }
 
-    return suggestions;
-  };
+  // 4. Consistently high engagement
+  if (parseInt(mode) === 2 && avg > 1.5) {
+    suggestions.push("✅ Consistently engaged! Offer enrichment tasks like small research projects.");
+    suggestions.push("📚 Let them support peers or present topics.");
+  }
+
+  // 5. Afternoon dip
+  if (afternoonLowCount > 2) {
+    suggestions.push("⏰ Low afternoon engagement detected. Use lighter content post-lunch.");
+    suggestions.push("🎧 Offer short audio/video learning aids during those hours.");
+  }
+
+  // 6. Negative feedback patterns
+  if (lowFeedbackCount > 1) {
+    suggestions.push("⚠️ Repeated negative feedback. Consider changing content delivery method.");
+    suggestions.push("🎨 Add visuals, simulations, or hands-on exercises.");
+  }
+
+  // Default fallback if no suggestions added
+  if (suggestions.length === 0) {
+    suggestions.push("🙂 Engagement is stable. Continue using your current strategies, but stay flexible.");
+  }
+
+  return suggestions;
+};
+
+
 
   return (
     <div style={{ maxWidth: 900, margin: "auto", padding: 20 }}>
