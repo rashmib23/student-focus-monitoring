@@ -24,45 +24,82 @@ const Register = () => {
   };
 
   return (
-    <div style={{ maxWidth: 400, margin: "auto", padding: 20 }}>
-      <h2>Register</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {message && <p style={{ color: "green" }}>{message}</p>}
-      <form onSubmit={handleSubmit}>
+    <div className="max-w-md mx-auto p-8 mt-12 bg-white rounded-lg shadow-md">
+      <h2 className="text-2xl font-semibold mb-6 text-center">Register</h2>
+
+      {error && (
+        <p className="mb-4 text-red-600 text-center font-medium">{error}</p>
+      )}
+      {message && (
+        <p className="mb-4 text-green-600 text-center font-medium">{message}</p>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label>Username</label>
+          <label
+            htmlFor="username"
+            className="block mb-2 text-gray-700 font-medium"
+          >
+            Username
+          </label>
           <input
+            id="username"
             type="text"
             value={username}
             required
             onChange={(e) => setUsername(e.target.value)}
             autoFocus
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
-        <div style={{ marginTop: 10 }}>
-          <label>Email</label>
+
+        <div>
+          <label
+            htmlFor="email"
+            className="block mb-2 text-gray-700 font-medium"
+          >
+            Email
+          </label>
           <input
+            id="email"
             type="email"
             value={email}
             required
             onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
-        <div style={{ marginTop: 10 }}>
-          <label>Password</label>
+
+        <div>
+          <label
+            htmlFor="password"
+            className="block mb-2 text-gray-700 font-medium"
+          >
+            Password
+          </label>
           <input
+            id="password"
             type="password"
             value={password}
             required
             onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
-        <button style={{ marginTop: 20 }} type="submit">
+
+        <button
+          type="submit"
+          className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition"
+        >
           Register
         </button>
       </form>
-      <p style={{ marginTop: 10 }}>
-        Already have an account? <Link to="/login">Login here</Link>
+
+      <p className="mt-6 text-center text-gray-600">
+        Already have an account?{" "}
+        <Link to="/login" className="text-blue-600 hover:underline">
+          Login here
+        </Link>
       </p>
     </div>
   );

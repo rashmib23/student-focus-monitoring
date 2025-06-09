@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { fetchHistory, deleteHistoryItem } from "../api"; // import delete API
-import { useNavigate, Link } from "react-router-dom";
+import { fetchHistory, deleteHistoryItem } from "../api"; 
+import { useNavigate } from "react-router-dom";
 
 const History = () => {
   const [history, setHistory] = useState([]);
@@ -24,12 +24,10 @@ const History = () => {
     loadHistory();
   }, []);
 
-  // Delete handler
   const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this history record?")) {
       deleteHistoryItem(id)
         .then(() => {
-          // Remove deleted item from state
           setHistory((prev) => prev.filter((item) => item._id !== id));
         })
         .catch((err) => {
@@ -38,7 +36,6 @@ const History = () => {
     }
   };
 
-  // Mapping function for engagement levels
   const getLabel = (level) => {
     switch (level) {
       case 0:
@@ -53,77 +50,76 @@ const History = () => {
   };
 
   return (
-    <div style={{ maxWidth: 700, margin: "auto", padding: 20 }}>
-      <nav
-        style={{
-          marginBottom: 20,
-          borderBottom: "1px solid #ccc",
-          paddingBottom: 10,
-        }}
-      >
-        <Link to="/dashboard" style={{ marginRight: 15 }}>
-                  Dashboard
-                </Link>
-                <Link to="/history" style={{ marginRight: 15 }}>
-                  History
-                </Link>
-                <Link to="/suggestion" style={{ marginRight: 15 }}>
-                  Suggestion
-                </Link>
-                <Link to="/profile" style={{ marginRight: 15 }}>
-                  Profile
-                </Link>
-                <button onClick={handleLogout} style={{ float: "right" }}>
-                  Logout
-                </button>
-              </nav>
+    <div className="max-w-4xl mx-auto p-6 mt-10">
+      <h2 className="text-3xl font-bold mb-6 text-center">Prediction History</h2>
 
-      <h2>Prediction History</h2>
-
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {error && (
+        <p className="mb-4 text-center text-red-600 font-medium">{error}</p>
+      )}
 
       {history.length === 0 ? (
-        <p>No history found.</p>
+        <p className="text-center text-gray-600">No history found.</p>
       ) : (
-        <table
-          border="1"
-          cellPadding="5"
-          style={{ width: "100%", borderCollapse: "collapse" }}
-        >
-          <thead>
-            <tr>
-              <th>Timestamp</th>
-              <th>Student ID</th>
-              <th>HeartRate</th>
-              <th>SkinConductance</th>
-              <th>EEG</th>
-              <th>Predicted Engagement Level</th>
-              <th>Feedback</th>
-              <th>Actions</th> {/* New column */}
-            </tr>
-          </thead>
-          <tbody>
-            {history.map((item) => (
-              <tr key={item._id}>
-                <td>{new Date(item.timestamp).toLocaleString()}</td>
-                <td>{item.student_id || "N/A"}</td>
-                <td>{item.input_data.HeartRate}</td>
-                <td>{item.input_data.SkinConductance}</td>
-                <td>{item.input_data.EEG}</td>
-                <td>{getLabel(item.predicted_engagement_level)}</td>
-                <td>{item.feedback || ""}</td>
-                <td>
-                  <button
-                    onClick={() => handleDelete(item._id)}
-                    style={{ color: "red", cursor: "pointer" }}
+        <div className="overflow-x-auto">
+          <table className="min-w-full border border-gray-300 rounded-md divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                {[
+                  "Timestamp",
+                  "Student ID",
+                  "HeartRate",
+                  "SkinConductance",
+                  "EEG",
+                  "Predicted Engagement Level",
+                  "Feedback",
+                  "Actions",
+                ].map((header) => (
+                  <th
+                    key={header}
+                    className="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-b border-gray-300"
                   >
-                    Delete
-                  </button>
-                </td>
+                    {header}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {history.map((item) => (
+                <tr key={item._id} className="hover:bg-gray-50">
+                  <td className="px-4 py-2 text-sm text-gray-700">
+                    {new Date(item.timestamp).toLocaleString()}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-700">
+                    {item.student_id || "N/A"}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-700">
+                    {item.input_data.HeartRate}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-700">
+                    {item.input_data.SkinConductance}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-700">
+                    {item.input_data.EEG}
+                  </td>
+                  <td className="px-4 py-2 text-sm font-medium text-gray-900">
+                    {getLabel(item.predicted_engagement_level)}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-700">
+                    {item.feedback || ""}
+                  </td>
+                  <td className="px-4 py-2 text-sm">
+                    <button
+                      onClick={() => handleDelete(item._id)}
+                      className="text-red-600 hover:text-red-800 font-semibold focus:outline-none"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

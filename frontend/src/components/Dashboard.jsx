@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { manualPredict, csvPredict } from "../api";
-import { useNavigate, Link } from "react-router-dom";
 
 const mapEngagementLabel = (value) => {
   switch (value) {
@@ -29,13 +28,6 @@ const Dashboard = () => {
 
   const [showManual, setShowManual] = useState(false);
   const [showCSV, setShowCSV] = useState(false);
-
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
 
   const handleManualSubmit = async (e) => {
     e.preventDefault();
@@ -74,22 +66,13 @@ const Dashboard = () => {
   };
 
   return (
-    <div style={{ maxWidth: 800, margin: "auto", padding: 20 }}>
-      {/* Navigation */}
-      <nav style={{ marginBottom: 20, borderBottom: "1px solid #ccc", paddingBottom: 10 }}>
-        <Link to="/dashboard" style={{ marginRight: 15 }}>Dashboard</Link>
-        <Link to="/history" style={{ marginRight: 15 }}>History</Link>
-        <Link to="/suggestion" style={{ marginRight: 15 }}>Suggestion</Link>
-        <Link to="/profile" style={{ marginRight: 15 }}>Profile</Link>
-        <button onClick={handleLogout} style={{ float: "right" }}>Logout</button>
-      </nav>
-
-      <h2>Student Focus Monitoring System</h2>
+    <div className="max-w-4xl mx-auto p-6">
+      <h2 className="text-3xl font-bold mb-6 text-center">Student Focus Monitoring System</h2>
 
       {/* System Description */}
-      <section style={{ marginBottom: 30, padding: 20, backgroundColor: "#fdfdfd", borderRadius: 8 }}>
-        <h3 style={{ marginBottom: 10 }}>About the System</h3>
-        <p style={{ textAlign: "justify", lineHeight: 1.6 }}>
+      <section className="mb-10 p-6 bg-white rounded-lg shadow-sm">
+        <h3 className="text-xl font-semibold mb-3">About the System</h3>
+        <p className="text-gray-700 leading-relaxed text-justify">
           This system is developed to assess and analyze student engagement levels using pre-recorded physiological data collected from academic or learning environments.
           By processing features such as <strong>Heart Rate</strong>, <strong>Skin Conductance</strong>, and <strong>EEG Alpha Wave activity</strong>,
           the system applies machine learning models to predict a learner’s cognitive focus and emotional engagement.
@@ -97,9 +80,9 @@ const Dashboard = () => {
       </section>
 
       {/* Signal Info */}
-      <section style={{ padding: 15, background: "#f5f5f5", borderRadius: 6, marginBottom: 30 }}>
-        <h4>Physiological Signal Descriptions</h4>
-        <ul>
+      <section className="mb-10 p-5 bg-gray-100 rounded-md">
+        <h4 className="text-lg font-semibold mb-3">Physiological Signal Descriptions</h4>
+        <ul className="list-disc list-inside text-gray-700 space-y-1">
           <li><strong>Heart Rate Variability (HRV):</strong> Cardiac responsiveness, measured in ms.</li>
           <li><strong>Skin Conductance (GSR):</strong> Emotional arousal, measured in µS.</li>
           <li><strong>EEG Alpha Waves:</strong> Brain wave activity indicating focus, measured in amplitude/frequency.</li>
@@ -107,103 +90,139 @@ const Dashboard = () => {
       </section>
 
       {/* Action Buttons */}
-      <div style={{ marginBottom: 20 }}>
-        <button onClick={() => setShowManual(!showManual)} style={{ marginRight: 15 }}>
+      <div className="mb-8 flex gap-4 flex-wrap">
+        <button
+          onClick={() => setShowManual(!showManual)}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition"
+        >
           {showManual ? "Hide Manual Input" : "Enter Data Manually"}
         </button>
-        <button onClick={() => setShowCSV(!showCSV)}>
+        <button
+          onClick={() => setShowCSV(!showCSV)}
+          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition"
+        >
           {showCSV ? "Hide CSV Upload" : "Upload CSV File"}
         </button>
       </div>
 
       {/* Manual Input Form */}
       {showManual && (
-        <section style={{ marginBottom: 30 }}>
-          <h3>Manual Input Prediction</h3>
-          <form onSubmit={handleManualSubmit}>
+        <section className="mb-10 bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-2xl font-semibold mb-5">Manual Input Prediction</h3>
+          <form onSubmit={handleManualSubmit} className="space-y-5 max-w-md">
             <div>
-              <label>Student ID</label>
+              <label className="block mb-1 font-medium text-gray-700">Student ID</label>
               <input
                 type="text"
                 value={studentId}
                 required
                 onChange={(e) => setStudentId(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label>Heart Rate</label>
+              <label className="block mb-1 font-medium text-gray-700">Heart Rate</label>
               <input
                 type="number"
                 step="0.01"
                 value={heartRate}
                 required
                 onChange={(e) => setHeartRate(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label>Skin Conductance</label>
+              <label className="block mb-1 font-medium text-gray-700">Skin Conductance</label>
               <input
                 type="number"
                 step="0.01"
                 value={skinConductance}
                 required
                 onChange={(e) => setSkinConductance(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label>EEG</label>
+              <label className="block mb-1 font-medium text-gray-700">EEG</label>
               <input
                 type="number"
                 step="0.01"
                 value={eeg}
                 required
                 onChange={(e) => setEeg(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            <button type="submit" style={{ marginTop: 10 }}>Predict Now</button>
+            <button
+              type="submit"
+              className="mt-3 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-md transition"
+            >
+              Predict Now
+            </button>
           </form>
+
           {manualResult !== null && (
-            <>
-              <p><strong>Predicted Engagement Level: </strong> {mapEngagementLabel(manualResult)}</p>
-              <p><strong>Feedback: </strong> {manualFeedback}</p>
-            </>
+            <div className="mt-6">
+              <p className="text-lg font-semibold">
+                Predicted Engagement Level:{" "}
+                <span className="text-blue-700">{mapEngagementLabel(manualResult)}</span>
+              </p>
+              <p className="mt-2 text-gray-700">{manualFeedback}</p>
+            </div>
           )}
         </section>
       )}
 
       {/* CSV Upload Form */}
       {showCSV && (
-        <section>
-          <h3>Upload CSV File</h3>
-          <p><small>CSV must include: student_id, HeartRate, SkinConductance, EEG</small></p>
-          <input type="file" accept=".csv" onChange={(e) => setCsvFile(e.target.files[0])} />
-          <button onClick={handleCsvSubmit} style={{ marginLeft: 10 }}>Predict CSV</button>
-          {csvError && <p style={{ color: "red" }}>{csvError}</p>}
+        <section className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-2xl font-semibold mb-4">Upload CSV File</h3>
+          <p className="text-sm text-gray-500 mb-3">
+            CSV must include: <code>student_id, HeartRate, SkinConductance, EEG</code>
+          </p>
+          <div className="flex items-center gap-3 mb-4">
+            <input
+              type="file"
+              accept=".csv"
+              onChange={(e) => setCsvFile(e.target.files[0])}
+              className="border border-gray-300 rounded-md px-3 py-2"
+            />
+            <button
+              onClick={handleCsvSubmit}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition"
+            >
+              Predict CSV
+            </button>
+          </div>
+          {csvError && <p className="text-red-600 mb-4">{csvError}</p>}
+
           {csvResults.length > 0 && (
-            <table border="1" cellPadding="5" style={{ marginTop: 10, width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr>
-                  <th>Student ID</th>
-                  <th>HeartRate</th>
-                  <th>SkinConductance</th>
-                  <th>EEG</th>
-                  <th>Predicted Engagement Level</th>
-                  <th>Feedback</th>
-                </tr>
-              </thead>
-              <tbody>
-                {csvResults.map((row, i) => (
-                  <tr key={i}>
-                    <td>{row.student_id || row.studentId || "N/A"}</td>
-                    <td>{row.HeartRate}</td>
-                    <td>{row.SkinConductance}</td>
-                    <td>{row.EEG}</td>
-                    <td>{mapEngagementLabel(row.PredictedEngagementLevel)}</td>
-                    <td>{row.Feedback || ""}</td>
+            <div className="overflow-x-auto">
+              <table className="min-w-full border border-gray-300 rounded-md border-collapse">
+                <thead className="bg-gray-200">
+                  <tr>
+                    <th className="border border-gray-300 px-3 py-2 text-left">Student ID</th>
+                    <th className="border border-gray-300 px-3 py-2 text-left">HeartRate</th>
+                    <th className="border border-gray-300 px-3 py-2 text-left">SkinConductance</th>
+                    <th className="border border-gray-300 px-3 py-2 text-left">EEG</th>
+                    <th className="border border-gray-300 px-3 py-2 text-left">Predicted Engagement Level</th>
+                    <th className="border border-gray-300 px-3 py-2 text-left">Feedback</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {csvResults.map((row, i) => (
+                    <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                      <td className="border border-gray-300 px-3 py-2">{row.student_id || row.studentId || "N/A"}</td>
+                      <td className="border border-gray-300 px-3 py-2">{row.HeartRate}</td>
+                      <td className="border border-gray-300 px-3 py-2">{row.SkinConductance}</td>
+                      <td className="border border-gray-300 px-3 py-2">{row.EEG}</td>
+                      <td className="border border-gray-300 px-3 py-2">{mapEngagementLabel(row.PredictedEngagementLevel)}</td>
+                      <td className="border border-gray-300 px-3 py-2">{row.Feedback || ""}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </section>
       )}

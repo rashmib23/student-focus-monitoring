@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { fetchHistoryByStudentId } from "../api";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -27,12 +27,7 @@ const Suggestion = () => {
   const [studentId, setStudentId] = useState("");
   const [history, setHistory] = useState([]);
   const [error, setError] = useState("");
-
   const navigate = useNavigate();
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
 
   const handleSearch = () => {
     if (studentId.trim()) {
@@ -49,14 +44,10 @@ const Suggestion = () => {
 
   const getLabel = (level) => {
     switch (level) {
-      case 0:
-        return "Low";
-      case 1:
-        return "Moderate";
-      case 2:
-        return "High";
-      default:
-        return "Unknown";
+      case 0: return "Low";
+      case 1: return "Moderate";
+      case 2: return "High";
+      default: return "Unknown";
     }
   };
 
@@ -69,211 +60,190 @@ const Suggestion = () => {
   const averageEngagement = () => {
     if (!history.length) return null;
     const avg =
-      history.reduce((acc, h) => acc + h.predicted_engagement_level, 0) /
-      history.length;
+      history.reduce((acc, h) => acc + h.predicted_engagement_level, 0) / history.length;
     return `${avg.toFixed(2)} (${getAvgLabel(avg)})`;
   };
 
   const generateDynamicSuggestions = () => {
-  const n = history.length;
-  if (n === 0) return [];
+    const n = history.length;
+    if (n === 0) return [];
 
-  const levels = history.map(h => h.predicted_engagement_level);
-  const avg = levels.reduce((sum, val) => sum + val, 0) / n;
+    const levels = history.map((h) => h.predicted_engagement_level);
+    const avg = levels.reduce((sum, val) => sum + val, 0) / n;
+    const recent = levels.slice(-Math.min(5, n));
+    const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length;
+    const variance = levels.reduce((acc, val) => acc + Math.pow(val - avg, 2), 0) / n;
 
-  const recent = levels.slice(-Math.min(5, n));
-  const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length;
+    const frequency = levels.reduce((acc, val) => {
+      acc[val] = (acc[val] || 0) + 1;
+      return acc;
+    }, {});
+    const mode = Object.keys(frequency).reduce((a, b) =>
+      frequency[a] > frequency[b] ? a : b
+    );
 
-  const variance = levels.reduce((acc, val) => acc + Math.pow(val - avg, 2), 0) / n;
+    const timestamps = history.map((h) => new Date(h.timestamp).getHours());
+    const afternoonLowCount = timestamps
+      .map((t, i) => (t >= 13 && t <= 16 && levels[i] < 1 ? 1 : 0))
+      .reduce((a, b) => a + b, 0);
 
-  const frequency = levels.reduce((acc, val) => {
-    acc[val] = (acc[val] || 0) + 1;
-    return acc;
-  }, {});
-  const mode = Object.keys(frequency).reduce((a, b) =>
-    frequency[a] > frequency[b] ? a : b
-  );
+    const lowFeedbackCount = history.filter(
+      (h) => h.feedback && h.feedback.toLowerCase().includes("boring")
+    ).length;
 
-  const timestamps = history.map(h => new Date(h.timestamp).getHours());
-  const afternoonLowCount = timestamps
-    .map((t, i) => (t >= 13 && t <= 16 && levels[i] < 1 ? 1 : 0))
-    .reduce((a, b) => a + b, 0);
+    const suggestions = [];
 
-  const lowFeedbackCount = history.filter(
-    h => h.feedback && h.feedback.toLowerCase().includes("boring")
-  ).length;
+    if (recentAvg < 0.5) {
+      suggestions.push("🟥 Very low recent focus. Try interactive activities like quizzes or peer discussion.");
+      suggestions.push("🧠 Use multimedia or personal storytelling to stimulate attention.");
+    }
 
-  const suggestions = [];
+    if (avg < 1 && recentAvg < avg) {
+      suggestions.push("📉 Engagement is dropping. Try short learning bursts and gamified tasks.");
+      suggestions.push("👥 Introduce collaborative exercises to improve involvement.");
+    }
 
-  // 1. Very low recent focus
-  if (recentAvg < 0.5) {
-    suggestions.push("🟥 Very low recent focus. Try interactive activities like quizzes or peer discussion.");
-    suggestions.push("🧠 Use multimedia or personal storytelling to stimulate attention.");
-  }
+    if (variance > 0.5) {
+      suggestions.push("🔁 Engagement fluctuates. Recommend fixed daily schedules or structured breaks.");
+      suggestions.push("⏱️ Use Pomodoro or 45-10 minute learning cycles.");
+    }
 
-  // 2. Engagement dropping
-  if (avg < 1 && recentAvg < avg) {
-    suggestions.push("📉 Engagement is dropping. Try short learning bursts and gamified tasks.");
-    suggestions.push("👥 Introduce collaborative exercises to improve involvement.");
-  }
+    if (parseInt(mode) === 2 && avg > 1.5) {
+      suggestions.push("✅ Consistently engaged! Offer enrichment tasks like small research projects.");
+      suggestions.push("📚 Let them support peers or present topics.");
+    }
 
-  // 3. High variance
-  if (variance > 0.5) {
-    suggestions.push("🔁 Engagement fluctuates. Recommend fixed daily schedules or structured breaks.");
-    suggestions.push("⏱️ Use Pomodoro or 45-10 minute learning cycles.");
-  }
+    if (afternoonLowCount > 2) {
+      suggestions.push("⏰ Low afternoon engagement detected. Use lighter content post-lunch.");
+      suggestions.push("🎧 Offer short audio/video learning aids during those hours.");
+    }
 
-  // 4. Consistently high engagement
-  if (parseInt(mode) === 2 && avg > 1.5) {
-    suggestions.push("✅ Consistently engaged! Offer enrichment tasks like small research projects.");
-    suggestions.push("📚 Let them support peers or present topics.");
-  }
+    if (lowFeedbackCount > 1) {
+      suggestions.push("⚠️ Repeated negative feedback. Consider changing content delivery method.");
+      suggestions.push("🎨 Add visuals, simulations, or hands-on exercises.");
+    }
 
-  // 5. Afternoon dip
-  if (afternoonLowCount > 2) {
-    suggestions.push("⏰ Low afternoon engagement detected. Use lighter content post-lunch.");
-    suggestions.push("🎧 Offer short audio/video learning aids during those hours.");
-  }
+    if (suggestions.length === 0) {
+      suggestions.push("🙂 Engagement is stable. Continue using your current strategies, but stay flexible.");
+    }
 
-  // 6. Negative feedback patterns
-  if (lowFeedbackCount > 1) {
-    suggestions.push("⚠️ Repeated negative feedback. Consider changing content delivery method.");
-    suggestions.push("🎨 Add visuals, simulations, or hands-on exercises.");
-  }
-
-  // Default fallback if no suggestions added
-  if (suggestions.length === 0) {
-    suggestions.push("🙂 Engagement is stable. Continue using your current strategies, but stay flexible.");
-  }
-
-  return suggestions;
-};
-
-
+    return suggestions;
+  };
 
   return (
-    <div style={{ maxWidth: 900, margin: "auto", padding: 20 }}>
-      {/* Navigation */}
-      <nav
-        style={{
-          marginBottom: 20,
-          borderBottom: "1px solid #ccc",
-          paddingBottom: 10,
-        }}
-      >
-        <Link to="/dashboard" style={{ marginRight: 15 }}>
-          Dashboard
-        </Link>
-        <Link to="/history" style={{ marginRight: 15 }}>
-          History
-        </Link>
-        <Link to="/suggestion" style={{ marginRight: 15 }}>
-          Suggestion
-        </Link>
-        <Link to="/profile" style={{ marginRight: 15 }}>
-          Profile
-        </Link>
-        <button onClick={handleLogout} style={{ float: "right" }}>
-          Logout
-        </button>
-      </nav>
+    <div className="max-w-5xl mx-auto p-6 font-sans bg-white rounded shadow">
+      <h2 className="text-3xl font-bold mb-6 text-center">Engagement Suggestion Center</h2>
 
-      <h2>Engagement Suggestion Center</h2>
-
-      <div style={{ marginBottom: 20 }}>
+      <div className="mb-6 flex gap-3">
         <input
           type="text"
           placeholder="Enter Student ID"
           value={studentId}
           onChange={(e) => setStudentId(e.target.value)}
-          style={{ marginRight: 10 }}
+          className="flex-grow border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <button onClick={handleSearch}>Search</button>
+        <button
+          onClick={handleSearch}
+          disabled={!studentId.trim()}
+          className={`px-5 py-2 rounded text-white ${
+            studentId.trim() ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-300 cursor-not-allowed"
+          }`}
+        >
+          Search
+        </button>
       </div>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {error && <p className="text-red-600 mb-6 font-semibold">{error}</p>}
 
       {history.length > 0 && (
         <>
-          <h3>Summary for: <em>{studentId}</em></h3>
-          <p><strong>Average Engagement Level:</strong> {averageEngagement()}</p>
+          <div className="mb-6">
+            <h3 className="text-xl font-semibold mb-2">Summary for: <em>{studentId}</em></h3>
+            <p><strong>Average Engagement Level:</strong> {averageEngagement()}</p>
+          </div>
 
-          {/* Dynamic Suggestions */}
-          <div style={{ marginTop: 10 }}>
-            <h4>Suggestions</h4>
-            <ul>
+          <div className="mb-6">
+            <h4 className="text-lg font-semibold mb-3">Suggestions</h4>
+            <ul className="list-disc list-inside space-y-2">
               {generateDynamicSuggestions().map((s, i) => (
-                <li key={i}>{s}</li>
+                <li key={i} className="text-gray-800">{s}</li>
               ))}
             </ul>
           </div>
 
-          {/* Table */}
-          <table border="1" cellPadding="5" style={{ width: "100%", marginTop: 20 }}>
-            <thead>
-              <tr>
-                <th>Time</th>
-                <th>HeartRate</th>
-                <th>SkinConductance</th>
-                <th>EEG</th>
-                <th>Engagement</th>
-                <th>Feedback</th>
-              </tr>
-            </thead>
-            <tbody>
-              {history.map((h) => (
-                <tr key={h._id}>
-                  <td>{new Date(h.timestamp).toLocaleString()}</td>
-                  <td>{h.input_data.HeartRate}</td>
-                  <td>{h.input_data.SkinConductance}</td>
-                  <td>{h.input_data.EEG}</td>
-                  <td>{getLabel(h.predicted_engagement_level)}</td>
-                  <td>{h.feedback || "—"}</td>
+          <div className="overflow-x-auto mb-10">
+            <table className="min-w-full border border-gray-300 text-left text-sm bg-white">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="border border-gray-300 px-3 py-2">Time</th>
+                  <th className="border border-gray-300 px-3 py-2">Heart Rate</th>
+                  <th className="border border-gray-300 px-3 py-2">Skin Conductance</th>
+                  <th className="border border-gray-300 px-3 py-2">EEG</th>
+                  <th className="border border-gray-300 px-3 py-2">Engagement</th>
+                  <th className="border border-gray-300 px-3 py-2">Feedback</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {history.map((h) => (
+                  <tr key={h._id} className="odd:bg-white even:bg-gray-50 hover:bg-blue-50 transition">
+                    <td className="border border-gray-300 px-3 py-2">{new Date(h.timestamp).toLocaleString()}</td>
+                    <td className="border border-gray-300 px-3 py-2">{h.input_data?.HeartRate ?? "—"}</td>
+                    <td className="border border-gray-300 px-3 py-2">{h.input_data?.SkinConductance ?? "—"}</td>
+                    <td className="border border-gray-300 px-3 py-2">{h.input_data?.EEG ?? "—"}</td>
+                    <td className="border border-gray-300 px-3 py-2">{getLabel(h.predicted_engagement_level)}</td>
+                    <td className="border border-gray-300 px-3 py-2">{h.feedback || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-          {/* Graph */}
-          <div style={{ marginTop: 40 }}>
-            <h4>Physiological Trends</h4>
+          <div className="bg-white p-4 rounded shadow">
+            <h4 className="text-lg font-semibold mb-4">Physiological Trends</h4>
             <Line
               data={{
-                labels: history.map((h) =>
-                  new Date(h.timestamp).toLocaleTimeString()
-                ),
+                labels: history.map((h) => new Date(h.timestamp).toLocaleTimeString()),
                 datasets: [
                   {
                     label: "Heart Rate",
-                    data: history.map((h) => h.input_data.HeartRate),
-                    borderColor: "red",
-                    backgroundColor: "rgba(255,0,0,0.1)",
+                    data: history.map((h) => h.input_data?.HeartRate ?? 0),
+                    borderColor: "rgb(239 68 68)",
+                    backgroundColor: "rgba(239,68,68,0.2)",
                     fill: true,
-                    tension: 0.4,
+                    tension: 0.3,
+                    pointRadius: 2,
                   },
                   {
                     label: "Skin Conductance",
-                    data: history.map((h) => h.input_data.SkinConductance),
-                    borderColor: "blue",
-                    backgroundColor: "rgba(0,0,255,0.1)",
+                    data: history.map((h) => h.input_data?.SkinConductance ?? 0),
+                    borderColor: "rgb(59 130 246)",
+                    backgroundColor: "rgba(59,130,246,0.2)",
                     fill: true,
-                    tension: 0.4,
+                    tension: 0.3,
+                    pointRadius: 2,
                   },
                   {
                     label: "EEG",
-                    data: history.map((h) => h.input_data.EEG),
-                    borderColor: "green",
-                    backgroundColor: "rgba(0,255,0,0.1)",
+                    data: history.map((h) => h.input_data?.EEG ?? 0),
+                    borderColor: "rgb(34 197 94)",
+                    backgroundColor: "rgba(34,197,94,0.2)",
                     fill: true,
-                    tension: 0.4,
+                    tension: 0.3,
+                    pointRadius: 2,
                   },
                 ],
               }}
               options={{
                 responsive: true,
                 plugins: {
-                  legend: {
-                    position: "top",
+                  legend: { position: "top" },
+                  tooltip: { mode: "index", intersect: false },
+                },
+                interaction: { mode: "nearest", axis: "x", intersect: false },
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 },
                   },
                 },
               }}

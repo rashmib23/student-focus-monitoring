@@ -1,11 +1,18 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
 import Login from "./components/Login";
 import Register from "./components/Register";
 import Dashboard from "./components/Dashboard";
 import History from "./components/History";
 import Profile from "./components/Profile";
 import Suggestion from "./components/Suggestion";
+
+import AppLayout from "./components/AppLayout";
+import PlainLayout from "./components/PlainLayout";
+
+import './tailwind-output.css';
+import './index.css';
 
 const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem("token");
@@ -16,14 +23,31 @@ const App = () => (
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<Navigate to="/dashboard" />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+
+      <Route
+        path="/login"
+        element={
+          <PlainLayout>
+            <Login />
+          </PlainLayout>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <PlainLayout>
+            <Register />
+          </PlainLayout>
+        }
+      />
 
       <Route
         path="/dashboard"
         element={
           <PrivateRoute>
-            <Dashboard />
+            <AppLayout>
+              <Dashboard />
+            </AppLayout>
           </PrivateRoute>
         }
       />
@@ -31,7 +55,9 @@ const App = () => (
         path="/history"
         element={
           <PrivateRoute>
-            <History />
+            <AppLayout>
+              <History />
+            </AppLayout>
           </PrivateRoute>
         }
       />
@@ -39,14 +65,19 @@ const App = () => (
         path="/profile"
         element={
           <PrivateRoute>
-            <Profile />
+            <AppLayout>
+              <Profile />
+            </AppLayout>
           </PrivateRoute>
         }
       />
-      <Route path="/suggestion" 
+      <Route
+        path="/suggestion"
         element={
           <PrivateRoute>
-            <Suggestion />
+            <AppLayout>
+              <Suggestion />
+            </AppLayout>
           </PrivateRoute>
         }
       />

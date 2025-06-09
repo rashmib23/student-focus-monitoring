@@ -1,17 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { fetchUserProfile } from "../api";  // Axios function calling /auth/profile
+import { useNavigate } from "react-router-dom";
+import { fetchUserProfile } from "../api";
 
 const Profile = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -22,7 +17,6 @@ const Profile = () => {
 
     fetchUserProfile()
       .then((res) => {
-        console.log("Fetched user profile:", res.data); // Only log the actual user data
         if (res.data && res.data.username && res.data.email) {
           setUser(res.data);
         } else {
@@ -38,44 +32,19 @@ const Profile = () => {
   }, [navigate]);
 
   return (
-    <div style={{ maxWidth: 700, margin: "auto", padding: 20 }}>
-      {/* Navigation Bar */}
-      <nav
-        style={{
-          marginBottom: 20,
-          borderBottom: "1px solid #ccc",
-          paddingBottom: 10,
-        }}
-      >
-        <Link to="/dashboard" style={{ marginRight: 15 }}>
-                  Dashboard
-                </Link>
-                <Link to="/history" style={{ marginRight: 15 }}>
-                  History
-                </Link>
-                <Link to="/suggestion" style={{ marginRight: 15 }}>
-                  Suggestion
-                </Link>
-                <Link to="/profile" style={{ marginRight: 15 }}>
-                  Profile
-                </Link>
-                <button onClick={handleLogout} style={{ float: "right" }}>
-                  Logout
-                </button>
-              </nav>
+    <div className="max-w-xl mx-auto mt-10 p-6 bg-white rounded shadow-md font-sans">
+      <h2 className="text-2xl font-bold mb-4 text-center">User Profile</h2>
 
-      <h2>User Profile</h2>
-
-      {loading && <p>Loading user details...</p>}
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {loading && <p className="text-gray-600">Loading user details...</p>}
+      {error && <p className="text-red-600">{error}</p>}
 
       {user && (
-        <div style={{ marginBottom: 40 }}>
+        <div className="space-y-2">
           <p>
-            <strong>Username:</strong> {user.username}
+            <span className="font-semibold">Username:</span> {user.username}
           </p>
           <p>
-            <strong>Email:</strong> {user.email}
+            <span className="font-semibold">Email:</span> {user.email}
           </p>
         </div>
       )}
