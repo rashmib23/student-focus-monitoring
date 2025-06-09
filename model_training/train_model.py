@@ -1,9 +1,10 @@
-import pandas as pd 
+import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 import joblib
 import os
+import shap
 
 # Load dataset
 data2 = pd.read_csv('data/data2.csv')
@@ -22,8 +23,9 @@ data2 = data2[['HeartRate', 'SkinConductance', 'EEG', 'EngagementLevel']]
 # Replace zeros with NaN to mark as missing
 data2[['HeartRate', 'SkinConductance', 'EEG']] = data2[['HeartRate', 'SkinConductance', 'EEG']].replace(0, np.nan)
 
-# Impute missing (NaN) values with column means
-data2.fillna(data2.mean(), inplace=True)
+# Impute missing values with column means
+column_means = data2[['HeartRate', 'SkinConductance', 'EEG']].mean()
+data2.fillna(column_means, inplace=True)
 
 # Features and target
 X = data2[['HeartRate', 'SkinConductance', 'EEG']]
@@ -37,12 +39,35 @@ X_scaled = scaler.fit_transform(X)
 model = RandomForestClassifier(n_estimators=100, random_state=42)
 model.fit(X_scaled, y)
 
-# Save artifacts folder if not exists
-os.makedirs('backend', exist_ok=True)
+# SHAP explanation (CPU mode, no torch backend)
+explainer = shap.Explainer(model, X_scaled)
+shap_values = explainer(X_scaled)
 
-# Save model, scaler, and column means (for inference)
+# Compute mean absolute SHAP values for each class
+shap_summary = {}
+engagement_labels = ['Low', 'Moderate', 'High']
+for i in range(3):  # Classes: 0=Low, 1=Moderate, 2=High
+    class_shap = np.abs(shap_values.values[y == i])
+    means = class_shap.mean(axis=0)  # Shape: (3,)
+
+    shap_summary[int(i)] = {
+        name: float(val[0] if isinstance(val, (np.ndarray, list)) else val)
+        for name, val in zip(['HeartRate', 'SkinConductance', 'EEG'], means)
+    }
+
+
+
+# Save everything to backend folder
+os.makedirs('backend', exist_ok=True)
 joblib.dump(model, 'backend/model.pkl')
 joblib.dump(scaler, 'backend/scaler.pkl')
-joblib.dump(X.mean(), 'backend/column_means.pkl')
+joblib.dump(column_means.to_dict(), 'backend/column_means.pkl')
+joblib.dump(shap_summary, 'backend/feature_importance_shap.pkl')
 
-print("✅ Model training completed with zero handling and saved to 'backend/'")
+os.makedirs('backend-1', exist_ok=True)
+joblib.dump(model, 'backend-1/model.pkl')
+joblib.dump(scaler, 'backend-1/scaler.pkl')
+joblib.dump(column_means.to_dict(), 'backend-1/column_means.pkl')
+joblib.dump(shap_summary, 'backend-1/feature_importance_shap.pkl')
+
+print("✅ Model training complete with SHAP-based feedback support saved to 'backend/'")

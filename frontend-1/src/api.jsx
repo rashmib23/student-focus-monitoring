@@ -32,3 +32,4 @@ export const csvPredict = (file) => {
 };
 
 export const fetchHistory = () => axiosInstance.get("/predict/history");
+export const deleteHistoryItem = (id) => axiosInstance.delete(`/predict/history/${id}`);

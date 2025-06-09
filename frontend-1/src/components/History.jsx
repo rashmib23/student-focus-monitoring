@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { fetchHistory } from "../api";
+import { fetchHistory, deleteHistoryItem } from "../api"; // import delete API
 import { useNavigate, Link } from "react-router-dom";
 
 const History = () => {
@@ -12,13 +12,31 @@ const History = () => {
     navigate("/login");
   };
 
-  useEffect(() => {
+  const loadHistory = () => {
     fetchHistory()
       .then((res) => setHistory(res.data))
       .catch((err) =>
         setError(err.response?.data?.error || "Failed to load history")
       );
+  };
+
+  useEffect(() => {
+    loadHistory();
   }, []);
+
+  // Delete handler
+  const handleDelete = (id) => {
+    if (window.confirm("Are you sure you want to delete this history record?")) {
+      deleteHistoryItem(id)
+        .then(() => {
+          // Remove deleted item from state
+          setHistory((prev) => prev.filter((item) => item._id !== id));
+        })
+        .catch((err) => {
+          setError(err.response?.data?.error || "Failed to delete history item");
+        });
+    }
+  };
 
   // Mapping function for engagement levels
   const getLabel = (level) => {
@@ -36,7 +54,6 @@ const History = () => {
 
   return (
     <div style={{ maxWidth: 700, margin: "auto", padding: 20 }}>
-      {/* Navigation Bar */}
       <nav
         style={{
           marginBottom: 20,
@@ -73,20 +90,33 @@ const History = () => {
           <thead>
             <tr>
               <th>Timestamp</th>
+              <th>Student ID</th>
               <th>HeartRate</th>
               <th>SkinConductance</th>
               <th>EEG</th>
               <th>Predicted Engagement Level</th>
+              <th>Feedback</th>
+              <th>Actions</th> {/* New column */}
             </tr>
           </thead>
           <tbody>
             {history.map((item) => (
               <tr key={item._id}>
                 <td>{new Date(item.timestamp).toLocaleString()}</td>
+                <td>{item.student_id || "N/A"}</td>
                 <td>{item.input_data.HeartRate}</td>
                 <td>{item.input_data.SkinConductance}</td>
                 <td>{item.input_data.EEG}</td>
                 <td>{getLabel(item.predicted_engagement_level)}</td>
+                <td>{item.feedback || ""}</td>
+                <td>
+                  <button
+                    onClick={() => handleDelete(item._id)}
+                    style={{ color: "red", cursor: "pointer" }}
+                  >
+                    Delete
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
