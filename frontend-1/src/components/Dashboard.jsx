@@ -78,18 +78,21 @@ const Dashboard = () => {
         style={{ marginBottom: 20, borderBottom: "1px solid #ccc", paddingBottom: 10 }}
       >
         <Link to="/dashboard" style={{ marginRight: 15 }}>
-          Dashboard
-        </Link>
-        <Link to="/history" style={{ marginRight: 15 }}>
-          History
-        </Link>
-        <Link to="/profile" style={{ marginRight: 15 }}>
-          Profile
-        </Link>
-        <button onClick={handleLogout} style={{ float: "right" }}>
-          Logout
-        </button>
-      </nav>
+                  Dashboard
+                </Link>
+                <Link to="/history" style={{ marginRight: 15 }}>
+                  History
+                </Link>
+                <Link to="/suggestion" style={{ marginRight: 15 }}>
+                  Suggestion
+                </Link>
+                <Link to="/profile" style={{ marginRight: 15 }}>
+                  Profile
+                </Link>
+                <button onClick={handleLogout} style={{ float: "right" }}>
+                  Logout
+                </button>
+              </nav>
 
       <h2>Dashboard</h2>
 

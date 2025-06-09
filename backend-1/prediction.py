@@ -213,3 +213,22 @@ def delete_history_item(history_id):
         return jsonify({"message": "History item deleted successfully"})
     else:
         return jsonify({"error": "History item not found or not authorized"}), 404
+    
+
+@prediction_bp.route('/history/student/<string:student_id>', methods=['GET'])
+def get_history_by_student(student_id):
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    username = verify_token(token)
+    if not username:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    history = list(predictions_collection.find({
+        "username": username,
+        "student_id": student_id
+    }))
+
+    for item in history:
+        item["_id"] = str(item["_id"])  # Convert ObjectId for JSON
+        item["timestamp"] = item.get("timestamp").isoformat()
+
+    return jsonify(history), 200

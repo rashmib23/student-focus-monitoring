@@ -5,6 +5,7 @@ import Register from "./components/Register";
 import Dashboard from "./components/Dashboard";
 import History from "./components/History";
 import Profile from "./components/Profile";
+import Suggestion from "./components/Suggestion";
 
 const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem("token");
@@ -39,6 +40,13 @@ const App = () => (
         element={
           <PrivateRoute>
             <Profile />
+          </PrivateRoute>
+        }
+      />
+      <Route path="/suggestion" 
+        element={
+          <PrivateRoute>
+            <Suggestion />
           </PrivateRoute>
         }
       />
