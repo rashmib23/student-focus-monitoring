@@ -60,29 +60,64 @@ const Suggestion = () => {
     }
   };
 
-  // Helper: Calculate average engagement level
+  const getAvgLabel = (avg) => {
+    if (avg < 0.8) return "Low";
+    else if (avg < 1.5) return "Moderate";
+    else return "High";
+  };
+
   const averageEngagement = () => {
     if (!history.length) return null;
     const avg =
       history.reduce((acc, h) => acc + h.predicted_engagement_level, 0) /
       history.length;
-    return avg.toFixed(2);
+    return `${avg.toFixed(2)} (${getAvgLabel(avg)})`;
   };
 
-  // Helper: Get most recent suggestion
-  const dynamicSuggestion = () => {
-    const recent = history.slice(-5);
-    const avgRecent =
-      recent.reduce((acc, h) => acc + h.predicted_engagement_level, 0) /
-      recent.length;
+  const generateDynamicSuggestions = () => {
+    const n = history.length;
+    if (n === 0) return [];
 
-    if (avgRecent < 0.5) {
-      return "Recent attention is very low. Suggest 5-minute physical movement or engaging quiz.";
-    } else if (avgRecent < 1.2) {
-      return "Moderate engagement recently. Try varying content presentation style.";
-    } else {
-      return "Student is staying engaged well. Offer advanced tasks to challenge them.";
+    const levels = history.map((h) => h.predicted_engagement_level);
+    const avg =
+      levels.reduce((acc, val) => acc + val, 0) / levels.length;
+
+    const recent = levels.slice(-5);
+    const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length;
+
+    const variance =
+      levels.reduce((acc, val) => acc + Math.pow(val - avg, 2), 0) / n;
+
+    const mode = levels
+      .sort((a, b) =>
+        levels.filter((v) => v === a).length -
+        levels.filter((v) => v === b).length
+      )
+      .pop();
+
+    const suggestions = [];
+
+    if (recentAvg < 0.5) {
+      suggestions.push("🟥 Very low recent focus. Suggest active tasks like discussion or quick quizzes.");
     }
+
+    if (avg < 1 && recentAvg < avg) {
+      suggestions.push("📉 Engagement is dropping. Recommend mentoring or personalized support.");
+    }
+
+    if (variance > 0.9) {
+      suggestions.push("🔁 Focus level varies. Encourage structured routines like Pomodoro.");
+    }
+
+    if (mode === 2 && avg > 1.5) {
+      suggestions.push("✅ Consistently engaged. Suggest advanced research or leadership opportunities.");
+    }
+
+    if (suggestions.length === 0) {
+      suggestions.push("🙂 Stable behavior. Continue using current teaching methods.");
+    }
+
+    return suggestions;
   };
 
   return (
@@ -131,7 +166,16 @@ const Suggestion = () => {
         <>
           <h3>Summary for: <em>{studentId}</em></h3>
           <p><strong>Average Engagement Level:</strong> {averageEngagement()}</p>
-          <p><strong>Latest Suggestion:</strong> {dynamicSuggestion()}</p>
+
+          {/* Dynamic Suggestions */}
+          <div style={{ marginTop: 10 }}>
+            <h4>Suggestions</h4>
+            <ul>
+              {generateDynamicSuggestions().map((s, i) => (
+                <li key={i}>{s}</li>
+              ))}
+            </ul>
+          </div>
 
           {/* Table */}
           <table border="1" cellPadding="5" style={{ width: "100%", marginTop: 20 }}>
@@ -203,29 +247,6 @@ const Suggestion = () => {
                 },
               }}
             />
-          </div>
-
-          {/* Smart Suggestions */}
-          <div style={{ marginTop: 40 }}>
-            <h4>Behavioral Suggestions</h4>
-            <ul>
-              {history.some((h) => h.predicted_engagement_level === 0) && (
-                <li>
-                  Low engagement detected. Introduce gamified content or peer interaction.
-                </li>
-              )}
-              {history.slice(-3).every((h) => h.predicted_engagement_level === 0) && (
-                <li>
-                  Recent trend shows consistent disengagement. Follow-up is recommended.
-                </li>
-              )}
-              {history.filter((h) => h.predicted_engagement_level === 2).length >=
-                history.length / 2 && (
-                <li>
-                  Student is doing great! Assign exploratory or creative tasks.
-                </li>
-              )}
-            </ul>
           </div>
         </>
       )}
