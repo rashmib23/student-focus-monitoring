@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { fetchHistory, deleteHistoryItem } from "../api"; 
+import { fetchHistory, deleteHistoryItem } from "../api";
 import { useNavigate } from "react-router-dom";
 
 const History = () => {
@@ -50,8 +50,10 @@ const History = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 mt-10">
-      <h2 className="text-3xl font-bold mb-6 text-center">Prediction History</h2>
+    <div className="max-w-6xl mx-auto p-6 mt-10">
+      <h2 className="text-3xl font-bold mb-6 text-center text-white rounded-xl px-6 py-3 bg-gradient-to-r from-pink-500 via-yellow-400 to-pink-500 shadow-lg">
+        Prediction History
+      </h2>
 
       {error && (
         <p className="mb-4 text-center text-red-600 font-medium">{error}</p>
@@ -62,7 +64,7 @@ const History = () => {
       ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full border border-gray-300 rounded-md divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-pink-100">
               <tr>
                 {[
                   "Timestamp",
@@ -76,7 +78,7 @@ const History = () => {
                 ].map((header) => (
                   <th
                     key={header}
-                    className="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-b border-gray-300"
+                    className="px-4 py-2 text-left text-sm font-semibold text-gray-800 border-b border-gray-300"
                   >
                     {header}
                   </th>
@@ -85,7 +87,10 @@ const History = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {history.map((item) => (
-                <tr key={item._id} className="hover:bg-gray-50">
+                <tr
+                  key={item._id}
+                  className="transition duration-300 ease-in-out transform hover:scale-[1.015] hover:shadow-md"
+                >
                   <td className="px-4 py-2 text-sm text-gray-700">
                     {new Date(item.timestamp).toLocaleString()}
                   </td>
@@ -101,7 +106,7 @@ const History = () => {
                   <td className="px-4 py-2 text-sm text-gray-700">
                     {item.input_data.EEG}
                   </td>
-                  <td className="px-4 py-2 text-sm font-medium text-gray-900">
+                  <td className="px-4 py-2 text-sm font-bold text-indigo-800">
                     {getLabel(item.predicted_engagement_level)}
                   </td>
                   <td className="px-4 py-2 text-sm text-gray-700">
@@ -110,7 +115,7 @@ const History = () => {
                   <td className="px-4 py-2 text-sm">
                     <button
                       onClick={() => handleDelete(item._id)}
-                      className="text-red-600 hover:text-red-800 font-semibold focus:outline-none"
+                      className="text-red-600 hover:text-white hover:bg-red-600 border border-red-600 px-3 py-1 rounded-md transition duration-200"
                     >
                       Delete
                     </button>
