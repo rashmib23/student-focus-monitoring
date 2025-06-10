@@ -32,21 +32,34 @@ const Profile = () => {
   }, [navigate]);
 
   return (
-    <div className="max-w-xl mx-auto mt-10 p-6 bg-white rounded shadow-md font-sans">
-      <h2 className="text-2xl font-bold mb-4 text-center">User Profile</h2>
+    <div className="max-w-xl mx-auto mt-16 p-8 bg-yellow-50 rounded-xl shadow-lg font-sans border border-yellow-200">
+      <h2 className="text-3xl font-extrabold text-center mb-6 text-gray-800">User Profile</h2>
 
-      {loading && <p className="text-gray-600">Loading user details...</p>}
-      {error && <p className="text-red-600">{error}</p>}
-
-      {user && (
-        <div className="space-y-2">
-          <p>
-            <span className="font-semibold">Username:</span> {user.username}
-          </p>
-          <p>
-            <span className="font-semibold">Email:</span> {user.email}
-          </p>
+      {loading ? (
+        <div className="flex justify-center items-center">
+          <div className="animate-spin h-6 w-6 border-4 border-yellow-600 border-t-transparent rounded-full"></div>
+          <span className="ml-3 text-yellow-800">Loading user details...</span>
         </div>
+      ) : error ? (
+        <p className="text-red-600 text-center">{error}</p>
+      ) : (
+        user && (
+          <div className="space-y-5 text-gray-700">
+            <div className="flex justify-center">
+              <img
+                src={`https://ui-avatars.com/api/?name=${user.username}&background=facc15&color=000&size=128`}
+                alt="User Avatar"
+                className="rounded-full shadow-md"
+              />
+            </div>
+            <p className="text-lg">
+              <span className="font-semibold">Username:</span> {user.username || "N/A"}
+            </p>
+            <p className="text-lg">
+              <span className="font-semibold">Email:</span> {user.email || "N/A"}
+            </p>
+          </div>
+        )
       )}
     </div>
   );

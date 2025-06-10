@@ -67,22 +67,25 @@ const Dashboard = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <h2 className="text-3xl font-bold mb-6 text-center">Student Focus Monitoring System</h2>
+      {/* Title Banner - keep original gradient */}
+      <div className="text-3xl font-bold text-white text-center p-6 mb-6 rounded-lg bg-gradient-to-r from-pink-500 via-yellow-400 to-pink-500 shadow-md">
+        Student Focus Monitoring System
+      </div>
 
-      {/* System Description */}
-      <section className="mb-10 p-6 bg-white rounded-lg shadow-sm">
+      {/* Cream background: System Description */}
+      <section className="mb-10 p-6 rounded-lg shadow-md" style={{ backgroundColor: "#FFFDD0" }}>
         <h3 className="text-xl font-semibold mb-3">About the System</h3>
-        <p className="text-gray-700 leading-relaxed text-justify">
+        <p className="text-gray-800 leading-relaxed text-justify">
           This system is developed to assess and analyze student engagement levels using pre-recorded physiological data collected from academic or learning environments.
           By processing features such as <strong>Heart Rate</strong>, <strong>Skin Conductance</strong>, and <strong>EEG Alpha Wave activity</strong>,
           the system applies machine learning models to predict a learner’s cognitive focus and emotional engagement.
         </p>
       </section>
 
-      {/* Signal Info */}
-      <section className="mb-10 p-5 bg-gray-100 rounded-md">
+      {/* Cream background: Signal Info */}
+      <section className="mb-10 p-5 rounded-md shadow-md" style={{ backgroundColor: "#FFFDD0" }}>
         <h4 className="text-lg font-semibold mb-3">Physiological Signal Descriptions</h4>
-        <ul className="list-disc list-inside text-gray-700 space-y-1">
+        <ul className="list-disc list-inside text-gray-800 space-y-1">
           <li><strong>Heart Rate Variability (HRV):</strong> Cardiac responsiveness, measured in ms.</li>
           <li><strong>Skin Conductance (GSR):</strong> Emotional arousal, measured in µS.</li>
           <li><strong>EEG Alpha Waves:</strong> Brain wave activity indicating focus, measured in frequency.</li>
@@ -90,7 +93,7 @@ const Dashboard = () => {
       </section>
 
       {/* Action Buttons */}
-      <div className="mb-8 flex gap-4 flex-wrap">
+      <div className="mb-8 flex gap-4 flex-wrap transition-transform hover:scale-105">
         <button
           onClick={() => setShowManual(!showManual)}
           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition"
@@ -105,9 +108,9 @@ const Dashboard = () => {
         </button>
       </div>
 
-      {/* Manual Input Form */}
+      {/* Cream background: Manual Input Form */}
       {showManual && (
-        <section className="mb-10 bg-white p-6 rounded-lg shadow-md">
+        <section className="mb-10 p-6 rounded-lg shadow-md transition-transform hover:scale-105" style={{ backgroundColor: "#FFFDD0" }}>
           <h3 className="text-2xl font-semibold mb-5">Manual Input Prediction</h3>
           <form onSubmit={handleManualSubmit} className="space-y-5 max-w-md">
             <div>
@@ -173,9 +176,9 @@ const Dashboard = () => {
         </section>
       )}
 
-      {/* CSV Upload Form */}
+      {/* Cream background: CSV Upload */}
       {showCSV && (
-        <section className="bg-white p-6 rounded-lg shadow-md">
+        <section className="p-6 rounded-lg shadow-md transition-transform hover:scale-105" style={{ backgroundColor: "#FFFDD0" }}>
           <h3 className="text-2xl font-semibold mb-4">Upload CSV File</h3>
           <p className="text-sm text-gray-500 mb-3">
             CSV must include: <code>student_id, HeartRate, SkinConductance, EEG</code>
