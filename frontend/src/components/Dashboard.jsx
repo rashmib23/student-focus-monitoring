@@ -85,7 +85,7 @@ const Dashboard = () => {
         <ul className="list-disc list-inside text-gray-700 space-y-1">
           <li><strong>Heart Rate Variability (HRV):</strong> Cardiac responsiveness, measured in ms.</li>
           <li><strong>Skin Conductance (GSR):</strong> Emotional arousal, measured in µS.</li>
-          <li><strong>EEG Alpha Waves:</strong> Brain wave activity indicating focus, measured in amplitude/frequency.</li>
+          <li><strong>EEG Alpha Waves:</strong> Brain wave activity indicating focus, measured in frequency.</li>
         </ul>
       </section>
 

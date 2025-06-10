@@ -64,10 +64,4 @@ joblib.dump(scaler, 'backend/scaler.pkl')
 joblib.dump(column_means.to_dict(), 'backend/column_means.pkl')
 joblib.dump(shap_summary, 'backend/feature_importance_shap.pkl')
 
-# os.makedirs('backend-1', exist_ok=True)
-# joblib.dump(model, 'backend-1/model.pkl')
-# joblib.dump(scaler, 'backend-1/scaler.pkl')
-# joblib.dump(column_means.to_dict(), 'backend-1/column_means.pkl')
-# joblib.dump(shap_summary, 'backend-1/feature_importance_shap.pkl')
-
 print("✅ Model training complete with SHAP-based feedback support saved to 'backend/'")
