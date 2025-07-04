@@ -104,22 +104,22 @@ const Suggestion = () => {
     }
 
     if (variance > 0.5) {
-      suggestions.push("🔁 Engagement fluctuates. Recommend fixed daily schedules or structured breaks.");
+      suggestions.push("🔁 Engagement fluctuates. Recommend fixed daily schedules or structured breaks (e.g., 25 min study, 5 min break).");
       suggestions.push("⏱️ Use Pomodoro or 45-10 minute learning cycles.");
     }
 
     if (parseInt(mode) === 2 && avg > 1.5) {
       suggestions.push("✅ Consistently engaged! Offer enrichment tasks like small research projects.");
-      suggestions.push("📚 Let them support peers or present topics.");
+      suggestions.push("📚 Let them support peers or present topics or advanced challenges.");
     }
 
     if (afternoonLowCount > 2) {
-      suggestions.push("⏰ Low afternoon engagement detected. Use lighter content post-lunch.");
+      suggestions.push("⏰ Low afternoon engagement detected. Use lighter content post-lunch or encourage short naps.");
       suggestions.push("🎧 Offer short audio/video learning aids during those hours.");
     }
 
     if (lowFeedbackCount > 1) {
-      suggestions.push("⚠️ Repeated negative feedback. Consider changing content delivery method.");
+      suggestions.push("⚠️ Repeated negative feedback.");
       suggestions.push("🎨 Add visuals, simulations, or hands-on exercises.");
     }
 
