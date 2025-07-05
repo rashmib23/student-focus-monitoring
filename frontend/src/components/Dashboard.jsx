@@ -118,6 +118,7 @@ const Dashboard = () => {
               <input
                 type="text"
                 value={studentId}
+                placeholder="ID/USN"
                 required
                 onChange={(e) => setStudentId(e.target.value)}
                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -129,6 +130,7 @@ const Dashboard = () => {
                 type="number"
                 step="0.01"
                 value={heartRate}
+                placeholder="In ms"
                 required
                 onChange={(e) => setHeartRate(e.target.value)}
                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -140,6 +142,7 @@ const Dashboard = () => {
                 type="number"
                 step="0.01"
                 value={skinConductance}
+                placeholder="In µS"
                 required
                 onChange={(e) => setSkinConductance(e.target.value)}
                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -151,6 +154,7 @@ const Dashboard = () => {
                 type="number"
                 step="0.01"
                 value={eeg}
+                placeholder="In µV"
                 required
                 onChange={(e) => setEeg(e.target.value)}
                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -181,7 +185,7 @@ const Dashboard = () => {
         <section className="p-6 rounded-lg shadow-md transition-transform hover:scale-105" style={{ backgroundColor: "#FFFDD0" }}>
           <h3 className="text-2xl font-semibold mb-4">Upload CSV File</h3>
           <p className="text-sm text-gray-500 mb-3">
-            CSV must include: <code>student_id, HeartRate, SkinConductance, EEG</code>
+            CSV must include: <code>student_id, HeartRate, SkinConductance, EEG, timestamp</code>
           </p>
           <div className="flex items-center gap-3 mb-4">
             <input

@@ -47,14 +47,20 @@ def grade_severity(value, mean):
     
 def validate_ranges(input_data):
     errors = []
-    if not (40 <= input_data['HeartRate'] <= 200):
-        errors.append("HeartRate must be between 40 and 200 BPM.")
-    if not (0 <= input_data['EEG'] <= 200):
-        errors.append("EEG must be between 0 and 200 uV.")
-    if not (0 <= input_data['SkinConductance'] <= 100):
-        errors.append("SkinConductance must be between 0 and 100 µS.")
-    return errors
+    
+    # HRV: 20 - 100 ms (based on real-world HRV values)
+    if not (20 <= input_data['HeartRate'] <= 100):
+        errors.append("HRV must be between 20 and 100 ms.")
 
+    # EEG Alpha: 1 - 20 µV (realistic range from dataset and EEG norms)
+    if not (1 <= input_data['EEG'] <= 20):
+        errors.append("EEG Alpha Waves must be between 1 and 20 µV.")
+
+    # GSR: 0.01 - 20 µS (based on typical GSR range)
+    if not (0.01 <= input_data['SkinConductance'] <= 20):
+        errors.append("GSR must be between 0.01 and 20 µS.")
+    
+    return errors
 
 def generate_feedback(level, features):
     shap_weights = shap_importance.get(int(level), {})
@@ -70,7 +76,9 @@ def generate_feedback(level, features):
     return feedback, top_features, severities
 
 def predict_df(df):
-    df.fillna(0, inplace=True)
+    df = df.copy()
+    for col in expected_columns:
+        df[col] = df[col].fillna(column_means[col])
     df_scaled = scaler.transform(df)
     return model.predict(df_scaled)
 
@@ -159,7 +167,7 @@ def csv_predict():
 
         # ✅ Use timestamp from CSV if exists, else use current time
         timestamp = row.get('timestamp')
-        if pd.isna(timestamp) or str(timestamp).strip() == "":
+        if pd.isna(timestamp) or not isinstance(timestamp, str) or timestamp.strip() == "":
             timestamp = pd.Timestamp.now()
         else:
             try:
