@@ -1,0 +1,9 @@
+Session start time,12:17:05,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Session stop time,12:22:01,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Markdown,"Time, min","Time, sec",IAPF,IAF,Baseline Fatigue Score,Fatigue Score,Baseline Alpha Gravity,Alpha Gravity,Baseline Concentration Index,Concentration Index,Baseline Relaxation Index,Relaxation Index,Baseline Reverse Fatigue,Reverse Fatigue,Heart Rate,Stress Index,Kaplan Index,Accumulated Fatigue,Theta,Alpha,Beta,Theta Peak frequency,Alpha Peak frequency,Beta Peak frequency,Chill,Stress,Focus,Anger,Self-Control
+IAPF Calibration,0,30,,,,,,,,,,,,,30.97951569,0,0,,0.1190445471,0.3531062828,0.2631482229,5.752492881,10.71723615,18.02587577,,,,,
+IAPF Calibration,1,60,,,,,,,,,,,,,52.59375078,0,0,,0.1592052046,0.3345497081,0.4065264084,5.659861235,9.652061264,19.39593511,,,,,
+IAPF Calibration,1,90,,,,,,,,,,,,,52.59375078,0,0,,0.1650805198,0.3302580745,0.4083752884,6.138463606,9.948016944,20.62705943,,,,,
+IAPF Calibration,2,120,,,,,,,,,,,,,52.63160706,0,0,,0.1829791299,0.2991379032,0.4335961693,5.862483166,9.897445917,21.76912176,,,,,
+IAPF Calibration,2,150,,,,,,,,,,,,,41.62254445,0,0,,0.2013699086,0.3042577159,0.408793122,5.998438423,8.878542592,20.22384353,,,,,
+IAPF Calibration,3,180,,,,,,,,,,,,,41.62619224,0,0,,0.2093422311,0.4112902623,0.2803004901,5.961536673,9.546507349,19.66892962,,,,,

@@ -145,10 +145,13 @@ def csv_predict():
     file = request.files['file']
     df = pd.read_csv(file)
 
-    # Required columns check
     required_columns = expected_columns + ['student_id']
     if not all(col in df.columns for col in required_columns):
         return jsonify({"error": f"CSV must contain columns: {required_columns}"}), 400
+
+    # Fill missing values with column means
+    for col in expected_columns:
+        df[col] = df[col].fillna(column_means[col])
 
     df_model = df[expected_columns]
     preds = predict_df(df_model)
@@ -158,14 +161,14 @@ def csv_predict():
     for idx, row in df.iterrows():
         student_id = row['student_id']
         input_row = row[expected_columns].to_dict()
+
         range_errors = validate_ranges(input_row)
         if range_errors:
-            continue
+            continue  # Skip if out of range
 
         level = int(row['PredictedEngagementLevel'])
         feedback, top_feats, severities = generate_feedback(level, input_row)
 
-        # ✅ Use timestamp from CSV if exists, else use current time
         timestamp = row.get('timestamp')
         if pd.isna(timestamp) or not isinstance(timestamp, str) or timestamp.strip() == "":
             timestamp = pd.Timestamp.now()
@@ -175,7 +178,6 @@ def csv_predict():
             except Exception:
                 timestamp = pd.Timestamp.now()
 
-        # Insert into MongoDB
         doc = {
             "username": username,
             "student_id": student_id,
@@ -188,10 +190,8 @@ def csv_predict():
         }
         predictions_collection.insert_one(doc)
 
-        # Append to response
         result = {
             "student_id": student_id,
-            "StudentID": student_id,
             **input_row,
             "PredictedEngagementLevel": level,
             "Feedback": feedback,
@@ -201,7 +201,11 @@ def csv_predict():
         }
         records.append(result)
 
+    if not records:
+        return jsonify({"error": "All valid rows were skipped due to out-of-range values."}), 400
+
     return jsonify(records)
+
 
 
 # ---------------------- /history route ----------------------
