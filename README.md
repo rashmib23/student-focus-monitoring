@@ -53,7 +53,7 @@ To assist students in improving their focus by:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/student-focus-monitoring.git
+git clone https://github.com/rashmib23/student-focus-monitoring.git
 cd student-focus-monitoring
 
 
