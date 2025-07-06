@@ -2,5 +2,9 @@
   "devDependencies": {
     "cross-env": "^7.0.3",
     "tailwindcss": "^4.1.8"
+  },
+  "dependencies": {
+    "matplotlib": "^1.0.0",
+    "seaborn": "^0.0.1-security"
   }
 }
