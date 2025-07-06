@@ -81,9 +81,9 @@ def parse_custom_csv(filepath, student_id, session_date_str):
 # -------------------------
 # 👇 DEVELOPER SETTINGS
 # -------------------------
-file_path = r"real-time-datasets\pre-dataset\metrics.csv"
-student_id = "Student_01"
-session_date = "2025-07-04"
+file_path = r"pre-dataset\metrics3.csv"
+student_id = "Stu02"
+session_date = "2025-06-26"
 # -------------------------
 
 final_df = parse_custom_csv(file_path, student_id, session_date)
