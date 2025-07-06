@@ -52,9 +52,9 @@ def validate_ranges(input_data):
     if not (20 <= input_data['HeartRate'] <= 100):
         errors.append("HRV must be between 20 and 100 ms.")
 
-    # EEG Alpha: 1 - 20 µV (realistic range from dataset and EEG norms)
+    # EEG Alpha: 1 - 20 Hz (realistic range from dataset and EEG norms)
     if not (1 <= input_data['EEG'] <= 20):
-        errors.append("EEG Alpha Waves must be between 1 and 20 µV.")
+        errors.append("EEG Alpha Waves must be between 1 and 20 Hz.")
 
     # GSR: 0.01 - 20 µS (based on typical GSR range)
     if not (0.01 <= input_data['SkinConductance'] <= 20):
